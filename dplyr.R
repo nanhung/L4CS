@@ -57,3 +57,5 @@ delays<-summarise(no_missing,
                   q75 = quantile(DepDelay, 0.75),
                   over_15 = mean(DepDelay>15)
 )
+
+# 36:06
