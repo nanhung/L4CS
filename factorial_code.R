@@ -9,3 +9,19 @@ Factorial_loop <- function(x){
   }
   print(y)
 }
+
+Factorial_reduce <- function(data){
+  if (data==0){
+  1
+  } else
+  reduce(c(1:data), function(x, y) x*y)
+}
+         
+Factorial_func <- function(x) {
+  if (x == 0) {
+    1
+  }
+  else {
+    x * Factorial_func(x-1)
+  }
+}         
