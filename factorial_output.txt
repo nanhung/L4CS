@@ -1,0 +1,46 @@
+microbenchmark::microbenchmark(Factorial_loop(1),
+                               Factorial_reduce(1),
+                               Factorial_func(1),
+                               Factorial_mem(1))
+## Unit: nanoseconds
+##                expr   min      lq     mean  median      uq    max neval
+##   Factorial_loop(1) 53005 60341.0 66664.23 63507.0 74131.5 138925   100
+## Factorial_reduce(1) 40738 44196.0 51171.71 51091.5 53075.5 138148   100
+##   Factorial_func(1)   889  1398.5  2031.07  1760.5  2584.5   5078   100
+##    Factorial_mem(1)  1102  1650.5  2663.63  2257.5  2982.5  16772   100
+
+
+microbenchmark::microbenchmark(Factorial_loop(8),
+                               Factorial_reduce(8),
+                               Factorial_func(8),
+                               Factorial_mem(8))
+## Unit: microseconds
+##                expr    min      lq     mean  median      uq     max neval
+##   Factorial_loop(8) 60.784 63.6600 76.07751 66.1725 93.4400 167.661   100
+## Factorial_reduce(8) 46.437 50.9345 63.35218 56.2025 76.7855 133.021   100
+##   Factorial_func(8)  3.678  4.9770  6.40786  5.8260  6.9845  13.914   100
+##    Factorial_mem(8)  3.741  4.4330  7.03093  6.2855  7.4685  35.373   100
+
+microbenchmark::microbenchmark(Factorial_loop(32),
+                               Factorial_reduce(32),
+                               Factorial_func(32),
+                               Factorial_mem(32))
+
+## Unit: microseconds
+##                 expr    min      lq     mean  median      uq     max neval
+##   Factorial_loop(32) 58.092 61.8865 73.87412 72.0875 83.3350 177.120   100
+## Factorial_reduce(32) 60.706 64.9830 71.91177 69.1920 74.8925 147.867   100
+##   Factorial_func(32) 13.551 16.0785 17.54911 16.9460 18.6015  50.457   100
+##    Factorial_mem(32)  3.450  4.4950  5.94870  5.9170  6.7565  19.843   100
+
+microbenchmark::microbenchmark(Factorial_loop(128),
+                               Factorial_reduce(128),
+                               Factorial_func(128),
+                               Factorial_mem(128))
+
+## Unit: microseconds
+##                  expr     min       lq      mean   median       uq     max neval
+##   Factorial_loop(128)  88.062  91.8400 101.89934  97.1250 106.7305 197.470   100
+## Factorial_reduce(128) 122.293 129.3115 137.75541 133.6255 139.1005 222.657   100
+##   Factorial_func(128)  59.612  63.6525  68.06022  65.7380  68.5960 111.312   100
+##    Factorial_mem(128)   3.671   5.7975   7.07113   6.8390   7.8645  33.230   100
