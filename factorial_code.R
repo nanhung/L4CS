@@ -15,16 +15,16 @@ Factorial_loop <- function(n){
 
 ## Factorial_reduce: a version that computes the factorial using the reduce() function in the purrr package ----
 Factorial_reduce <- function(n){
-  if (n==0) 1 else purrr::reduce(c(1:n), function(x, y) x*y)
+  if (n==0) 1 else purrr::reduce(as.numeric(1:n), function(x, y) x * y)
 }
 
 ## Factorial_func: a version that uses recursion to compute the factorial ----                                  
 Factorial_func <- function(n) {
   if (n == 0) 1 else n * Factorial_func(n-1)
 } 
-                                 
+
 ## Factorial_mem: a version that uses memoization to compute the factorial ----
-                                 
+
 mem <- function(){
   
   out <- 1
@@ -45,8 +45,23 @@ mem <- function(){
 
 Factorial_mem <- mem()
 
-## Microbenchmark----                                 
-microbenchmark(Factorial_loop(10),
-               Factorial_reduce(10),
-               Factorial_func(10),
-               Factorial_mem(10))
+###
+microbenchmark::microbenchmark(Factorial_loop(1),
+                               Factorial_reduce(1),
+                               Factorial_func(1),
+                               Factorial_mem(1))
+
+microbenchmark::microbenchmark(Factorial_loop(8),
+                               Factorial_reduce(8),
+                               Factorial_func(8),
+                               Factorial_mem(8))
+
+microbenchmark::microbenchmark(Factorial_loop(32),
+                               Factorial_reduce(32),
+                               Factorial_func(32),
+                               Factorial_mem(32))
+
+microbenchmark::microbenchmark(Factorial_loop(128),
+                               Factorial_reduce(128),
+                               Factorial_func(128),
+                               Factorial_mem(128))
