@@ -11,6 +11,7 @@ Factorial_loop <- function(x){
 }
 
 Factorial_reduce <- function(data){
+  library(purrr)
   if (data==0){
   1
   } else
