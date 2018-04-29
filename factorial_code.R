@@ -44,3 +44,9 @@ mem <- function(){
 }
 
 Factorial_mem <- mem()
+
+## Microbenchmark----                                 
+microbenchmark(Factorial_loop(10),
+               Factorial_reduce(10),
+               Factorial_func(10),
+               Factorial_mem(10))
