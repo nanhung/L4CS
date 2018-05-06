@@ -10,7 +10,6 @@ make_LD <- function(df){
 subject <- function(x, i) UseMethod("subject")
 visit <- function(x, i) UseMethod("visit")
 room <- function(x, i) UseMethod("room")
-print <- function(x) UseMethod("print")
 
 subject.LongitudinalData <- function(x, i) {
 
