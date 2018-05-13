@@ -93,32 +93,3 @@ summary.LongitudinalData <- function(x) {
 }
 
 
-
-############
-library(pryr)
-library(dplyr)
-ftype(make_LD)
-ftype(subject)
-
-
-x<-make_LD(df) 
-
-make_LD(df) %>% summary
-
-make_LD(df) %>% print # All data
-
-make_LD(df) %>% subject(14) %>% print # subject 14
-
-make_LD(df) %>% subject(14) %>% summary # subject 14
-
-make_LD(df) %>% visit(1) %>% print # visit 1
-
-make_LD(df) %>% room("den") %>% print # room den
-
-make_LD(df) %>% subject(c(14,20)) %>% visit(c(1,2)) %>% print 
-
-make_LD(df) %>% subject(c(14,20)) %>% visit(c(1,2)) %>% room(c("den", "bedroom")) %>% print
-
-
-
-

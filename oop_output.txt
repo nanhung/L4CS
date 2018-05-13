@@ -1,0 +1,299 @@
+##################
+# Import package #
+##################
+
+library(pryr)
+library(dplyr)
+
+##############################
+# Test the created functions #
+##############################
+
+ftype(make_LD)
+## [1] "function"
+
+ftype(subject)
+## [1] "s3"      "generic"
+
+###########################
+# Create LongitudinalData #
+###########################
+
+x<-make_LD(df) 
+
+#######################################
+# Create LongitudinalData and summary #
+#######################################
+
+make_LD(df) %>% summary
+
+## LongitudinalData: n = 120877 
+
+## ID
+## 14, 20, 41, 44, 46, 54, 64, 74, 104, 106
+
+## Visit
+## 0, 1, 2
+
+## Room
+## bedroom, living room, family  room, study room, den, tv room, office, hall, kitchen, dining room
+
+## Value
+## 2 - 1775 (min-max)
+
+## Timepoint
+## 1 - 3075 (min-max)
+
+########################################################################################
+# Create LongitudinalData and print (include more information and detail than summary) #
+########################################################################################
+make_LD(df) %>% print
+
+## LongitudinalData: n = 120877 
+
+## ID [ integer ]
+
+##    14    20    41    44    46    54    64    74   104   106 
+## 11945 11497 11636 13104 13812 10944 11367 11517 11232 13823 
+
+
+## Visit [ integer ]
+
+##     0     1     2 
+## 39579 41565 39733 
+
+
+## Room [ factor ]
+
+##    bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##      54827         7198         1872         3879         1872         4032        37564         3744 
+## study room      tv room 
+##       1872         4017 
+
+
+## Value [ numeric ]
+## Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 2.000    2.750    7.875   17.412   16.000 1775.000 
+
+
+## Timepoint [ integer ]
+## Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## 1     562    1065    1088    1569    3075 
+
+
+
+####################################################
+# Create LongitudinalData for subject 14 and print #
+####################################################
+
+make_LD(df) %>% subject(14) %>% print
+
+## LongitudinalData: n = 11945 
+
+## ID [ integer ]
+
+##    14 
+## 11945 
+
+
+## Visit [ integer ]
+
+##    0    1    2 
+## 3744 3744 4457 
+
+
+## Room [ factor ]
+
+##    bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##       6041            0            0         1872            0            0         4032            0 
+## study room      tv room 
+##          0            0 
+
+
+## Value [ numeric ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    2.75    2.75    2.75   10.69    7.00  656.00 
+
+
+## Timepoint [ integer ]
+## Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   42     548    1046    1054    1544    2353 
+
+
+
+######################################################
+# Create LongitudinalData for subject 14 and summary #
+######################################################
+
+make_LD(df) %>% subject(14) %>% summary # subject 14
+
+## LongitudinalData: n = 11945 
+
+## ID
+## 14
+
+## Visit
+## 0, 1, 2
+
+## Room
+## bedroom, living room, family  room
+
+## Value
+## 2.75 - 656 (min-max)
+
+## Timepoint
+## 42 - 2353 (min-max)
+
+
+
+###################################################
+# Create LongitudinalData for visit 1 and summary #
+###################################################
+
+make_LD(df) %>% visit(1) %>% print
+
+## LongitudinalData: n = 41565 
+
+## ID [ integer ]
+
+##   14   20   41   44   46   54   64   74  104  106 
+## 3744 4010 4012 3744 6048 3744 3879 4320 3744 4320 
+
+
+## Visit [ integer ]
+
+##     1 
+## 41565 
+
+
+## Room [ factor ]
+
+##    bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##      18842         1872            0         3879            0         2160        10932         1872 
+## study room      tv room 
+##          0         2008 
+
+
+## Value [ numeric ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    2.75    2.75    7.00   11.58   12.50 1607.00 
+
+
+## Timepoint [ integer ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       1     566    1085    1111    1605    3075 
+
+
+
+####################################################
+# Create LongitudinalData for room "den" and print #
+####################################################
+
+make_LD(df) %>% room("den") %>% print # room den
+
+## LongitudinalData: n = 7198 
+
+## ID [ integer ]
+
+##   20   54   74 
+## 1872 3600 1726 
+
+
+## Visit [ integer ]
+
+##    1    2 
+## 1872 5326 
+
+
+## Room [ factor ]
+
+## bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##       0         7198            0            0            0            0            0            0 
+## study room      tv room 
+##          0            0 
+
+
+## Value [ numeric ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    2.750   2.750   2.750   7.127  11.000 271.000 
+
+
+## Timepoint [ integer ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.0   500.0   949.5   952.1  1399.0  1961.0 
+
+
+################################################################################
+# Create LongitudinalData for mutiple conditions in subject and room and print #
+################################################################################
+
+make_LD(df) %>% subject(c(14,20)) %>% visit(c(1,2)) %>% print 
+
+## LongitudinalData: n = 15955 
+
+## ID [ integer ]
+
+##   14   20 
+## 8201 7754 
+
+
+## Visit [ integer ]
+
+##    1    2 
+## 7754 8201 
+
+
+## Room [ factor ]
+
+##    bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##       8047         1872            0         1872            0            0         4164            0 
+## study room      tv room 
+##          0            0 
+
+
+## Value [ numeric ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    2.75    2.75    2.75   10.57    9.50  656.00 
+
+
+## Timepoint [ integer ]
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       8     547    1046    1051    1544    2353 
+
+
+#########################################################################################
+# Create LongitudinalData for mutiple conditions (in subject, visit, and room)and print #
+#########################################################################################
+
+make_LD(df) %>% subject(c(14,20)) %>% visit(c(1,2)) %>% room(c("den", "bedroom")) %>% print
+
+## LongitudinalData: n = 9919 
+
+## ID [ integer ]
+
+##   14   20 
+## 4169 5750 
+
+
+## Visit [ integer ]
+
+##    1    2 
+## 3878 6041 
+
+
+## Room [ factor ]
+
+##    bedroom          den  dining room family  room         hall      kitchen  living room       office 
+##       8047         1872            0            0            0            0            0            0 
+## study room      tv room 
+##          0            0 
+
+
+## Value [ numeric ]
+##     Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     2.750   2.750   2.750   8.029   5.375 639.000 
+
+
+## Timepoint [ integer ]
+##     Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     8     553    1049    1055    1544    2353 
