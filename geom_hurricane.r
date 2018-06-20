@@ -1,4 +1,5 @@
-read_EBT_data <- function(filename) {
+read_hdata <- function(filename) {
+  
   ext_tracks_widths <- c(7, 10, 2, 2, 3, 5, 5, 6, 4, 5, 4, 4, 5, 3, 4, 3, 3, 3,
                          4, 3, 3, 3, 4, 3, 3, 3, 2, 6, 1)
   ext_tracks_colnames <- c("storm_id", "storm_name", "month", "day",
@@ -9,12 +10,39 @@ read_EBT_data <- function(filename) {
                            paste("radius_50", c("ne", "se", "sw", "nw"), sep = "_"),
                            paste("radius_64", c("ne", "se", "sw", "nw"), sep = "_"),
                            "storm_type", "distance_to_land", "final")
+  
   ext_tracks <- read_fwf("ebtrk_atlc_1988_2015.txt", 
                          fwf_widths(ext_tracks_widths, ext_tracks_colnames),
                          na = "-99")
+  
   return(ext_tracks)
+  
 }
 
+tidy_hdata <- function(data) {
+  data %>% 
+    
+    
+    dplyr::mutate_(storm_id = ~stringr::str_c(stringr::str_to_title(storm_name), year, sep = '-'),
+                   date = ~stringr::str_c(year, '-', month, '-', day, ' ', hour, ':', '00', ':', '00'),
+                   longitude = ~-longitude
+    ) %>% 
+    # Select only the relevant columns
+    dplyr::select_(.dots = c('storm_id', 'date', 'longitude', 'latitude', 
+                             'radius_34_ne', 'radius_34_se', 'radius_34_sw', 'radius_34_nw',
+                             'radius_50_ne', 'radius_50_se', 'radius_50_sw', 'radius_50_nw',
+                             'radius_64_ne', 'radius_64_se', 'radius_64_sw', 'radius_64_nw')
+    ) %>%
+    
+    #There is a better way to do this part, this is the wide to long transfmration
+    tidyr::gather(variable, value, -storm_id, -date,-latitude, -longitude, -storm_id, -date) %>% mutate_(wind_speed = ~str_extract(variable, "(34|50|64)"),
+                                                                                                         variable = ~str_extract(variable, "(ne|nw|se|sw)")) %>% tidyr::spread(variable, value) %>% select_(.dots = c('storm_id', 'date', 'latitude', 'longitude', 'wind_speed', 'ne', 'nw', 'se', 'sw'))
+}
+
+filter_hdata <- function(data, hurricane, observation) {
+  data <- filter_(data, ~storm_id == hurricane & date == observation)
+  
+}
 
 geom_hurricane <- function(mapping = NULL, data = NULL, stat = 'identity',
                            position = 'identity', 
