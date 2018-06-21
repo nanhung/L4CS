@@ -1,6 +1,7 @@
 library(mixtox)
 library(ggplot2)
 library(dplyr)
+library(plyr)
 
 compound <- c(rep("PAR", 12), rep("SPE", 12), rep("KAN", 12), rep("STR", 12), rep("DIH", 12), rep("GEN", 12), rep("NEO", 12),
               rep("EE05 mixture", 12), rep("EE50 mixture", 12),
@@ -160,7 +161,13 @@ dev.off()
 #
 rownames(udca$unitab) <- c("u1","u2","u3","u4","u5","u6","u7","u8","u9","u10")
 colnames(udca$unitab) <- c("l1","l2","l3","l4","l5","l6","l7")
-dat <- reshape2::melt(udca$unitab)
+dat <- reshape2::melt(udca$unitab) %>%
+  mutate(EC = ifelse(value %in% 1:2, "EC05",
+                     ifelse(value %in% 3:4, "EC10",
+                            ifelse(value %in% 5:6, "EC20",
+                                   ifelse(value %in% 7:8, "EC30",
+                                          ifelse(value %in% 9:10, "EC50", NA))))))
+
 
 png(file="mixtox-4.png",width=3600,height=2800,res=300)
 ggplot(data =  dat, aes(x = Var1, y = Var2)) +
@@ -172,6 +179,19 @@ ggplot(data =  dat, aes(x = Var1, y = Var2)) +
   ylab("number of factors (compounds)") +
   guides(fill=FALSE)
 dev.off()
+
+png(file="mixtox-4-1.png",width=3600,height=2800,res=300)
+ggplot(data =  dat, aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = value), colour = "white") +
+  geom_text(aes(label = EC), vjust = 1) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  ggtitle("Uniform Design Table") +
+  xlab("number of runs (levels or pseudo-levels)") +
+  ylab("number of factors (compounds)") +
+  guides(fill=FALSE)
+dev.off()
+
+
 
 df <- reshape2::melt(antibiotox$udcr.pct)
 names(df) <- c("U","aminoglycoside","percentage")
