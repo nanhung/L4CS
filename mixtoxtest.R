@@ -54,12 +54,14 @@ response <- cbind(df1$response, df2$response)
 response <- apply(response, 2, function(x) x/max(x))
 
 tuneFit1 <- tuneFit(conc, rowMeans(response), eq = "Hill")
+tuneFit1 <- tuneFit(conc, rowMeans(response), eq = "Logit")
+tuneFit1 <- tuneFit(conc, rowMeans(response), eq = "Weibull")
 tuneFit1
 
-fit1 <- curveFit(conc, rowMeans(response), eq = "Hill", 
+fit1 <- curveFit(conc, rowMeans(response), eq = "Logit", 
                  param = c(tuneFit1$sta[1], tuneFit1$sta[2]))
 
 figPlot(fit1, xlab=expression(paste("Conc. (", mu,"M)")), ylab="Inhibition (%)")
-mtext(paste0("ALDRIN (Hill);"," r2 = ",round(tuneFit1$sta[3],3)))
+mtext(paste0("ALDRIN (Logit);"," r2 = ",round(tuneFit1$sta[3],3)))
 
 
