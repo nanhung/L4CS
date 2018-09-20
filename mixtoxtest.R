@@ -1,12 +1,12 @@
 # devtools::install_github("lahothorn/SiTuR")
-#library(tukeytrend)
+library(tukeytrend)
 library(mixtox)
 library(ggplot2)
 library(dplyr)
 #library(plyr)
 library(tidyr) #seperate
 library(broom)
-
+library(scales)
 
 df <- read.csv("mixtoxtest.csv")
 colnames(df)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
@@ -25,12 +25,13 @@ dfChemdose <- dfChemCoef %>% filter(term %in% "dose") %>%
   mutate(screen = ifelse(p.value < 0.001 & estimate < 0, "Tox", "Non-Tox"))
 
 
-png(file="dose_response.png",width=5200,height=2800,res=300)
+png(file="dose_response.png",width=5200,height=3600,res=300)
 ggplot(DF1, aes(x = dose, y = response)) +
   geom_point(aes(colour = round))+
   geom_path(aes(colour = round), size = 0.1) + 
-  facet_wrap( ~ chemical, ncol = 7) + 
-  scale_x_log10() + theme_bw()
+  facet_wrap( ~ chemical, ncol = 6) + theme_bw() +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)))
 dev.off()
 
 png(file="significant_test.png",width=3600,height=2800,res=300)
@@ -44,6 +45,16 @@ ggplot(dfChemdose, aes(x = estimate, y = -log(p.value), label = chemical)) +
   geom_label(size = 2, aes(fill = screen), colour = "white", fontface = "bold") +
   theme(legend.position='none')
 dev.off()
+
+###
+p3<-ggplot(DF1, aes(x = dose, y = response)) +
+  geom_point(aes(colour = round))+
+  geom_path(aes(colour = round), size = 0.1) + 
+  facet_wrap( ~ chemical, ncol = 6) + 
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)))+
+  theme(legend.position = "none", rect = element_rect(fill = "transparent"))
+g<-ggplotGrob(p3)
 
 #####################
 
@@ -68,27 +79,71 @@ P.DF <- p.df %>% reshape::melt() %>%
 
 P.DF <- P.DF[!is.infinite(P.DF$logp),]
 
-png(file="significant_test2.png",width=4800,height=2800,res=300)
+png(file="significant_test2.png",width=5600,height=4000,res=300)
 ggplot(P.DF, aes(x = reorder(chemical, logp), y=logp, label = scaling)) +
   geom_label(size = 3, aes(fill = scaling), colour = "white", fontface = "bold") +
   geom_path(linetype = 2, color = "grey40") +
   geom_hline(yintercept=-log(0.05), col = "grey60", linetype = "dashed")+
+  geom_hline(yintercept=-log(0.001), col = "grey60", linetype = "dotted")+
   xlab(expression('chemical'))+
   ylab("-log10 (p-value)") +
   annotate("text", x = 1, y = -log(0.05)+0.2, label = "p = 0.05", col = "grey60")+
+  annotate("text", x = 1, y = -log(0.001)+0.2, label = "p = 0.001", col = "grey60")+
+  annotation_custom(grob=g, xmin = 1, xmax = 26,
+                    ymin=7, ymax=34)+
   coord_flip()
 dev.off()
 
 ######################
 
 chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
-          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "DI(2-ETHYLHEXYL)PHTHALATE")
-          #"HEPTACHLOR EPOXIDE", "CHLORPYRIFOS", "METHOXYCHLOR", 
+          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "CHLORPYRIFOS")
+          #"HEPTACHLOR EPOXIDE", "DI(2-ETHYLHEXYL)PHTHALATE", "METHOXYCHLOR", 
           #"ENDRIN", "Potassium Chromate",
           #"DDT, P,P'-", "NICKEL",
           #"COBALT","BENZO(B)FLUORANTHEN")
 
-par(mfrow = c(2,5))
+Screen_df <- DF1 %>% filter(chemical %in% chem) %>% 
+  group_by(round, chemical) %>% mutate(normalize.response = response/max(response))
+
+png(file="chem10_non-norm.png",width=2400,height=3600,res=300)
+ggplot(Screen_df, aes(x = dose, y = response)) +
+  geom_point(aes(colour = round))+
+  geom_path(aes(colour = round), size = 0.1) + 
+  facet_wrap( ~ chemical, ncol = 2) + 
+  theme_bw() + theme(legend.position = "top") +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) 
+dev.off()
+
+png(file="chem10_norm.png",width=2400,height=3600,res=300)
+ggplot(Screen_df, aes(x = dose, y = normalize.response)) +
+  geom_point(aes(colour = round))+
+  geom_path(aes(colour = round), size = 0.1) + 
+  facet_wrap( ~ chemical, ncol = 2) + 
+  theme_bw() + theme(legend.position = "top") +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) 
+dev.off()
+
+##########################
+
+Tox_chem <- dfChemdose %>% filter(screen == "Tox") 
+param2fitplot <- function (chem, model){
+  chem.no <- which(Tox_chem$chemical == chem)
+  DF <- DF1 %>% filter(chemical == Tox_chem$chemical[chem.no]) %>% 
+    group_by(round) %>% mutate(normalize.response = response/max(response))
+  DR <- as.data.frame(DF %>% group_by(dose) %>% 
+                        summarise(N.R = mean(normalize.response)))
+  tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = model)
+  fit1 <- curveFit(DR$dose, DR$N.R, eq = model, 
+                   param = c(tuneFit1$sta[1], tuneFit1$sta[2]))
+  figPlot(fit1, xlab=expression(paste("Log", "Conc. (", mu,"M)")), ylab="Response (%)")
+  mtext(paste(chem, ", R2 = ", round(tuneFit1$sta[4],3)))
+}
+
+png(file="Fit.png",width=4800,height=2200,res=300)
+par(mfrow = c(2,5), oma=c(0,0,2,0))
 param2fitplot("DDT, O,P'-", "Logit")
 param2fitplot("ALDRIN", "Logit")
 param2fitplot("DIELDRIN", "Logit")
@@ -101,33 +156,12 @@ param2fitplot("DICOFOL", "Logit")
 #param2fitplot("DI(2-ETHYLHEXYL)PHTHALATE", "Logit")
 param2fitplot("HEPTACHLOR EPOXIDE", "Logit")
 param2fitplot("CHLORPYRIFOS", "Logit")
-
+dev.off()
 
 #detach(package:plyr)
-library(scales)
 
 Tox_chem <- dfChemdose %>% filter(screen == "Tox") 
 Tox_chem$chemical
-
-DF <- DF1 %>% filter(chemical == Tox_chem$chemical[i]) %>% 
-  group_by(round) %>% mutate(normalize.response = response/max(response))
-DR <- as.data.frame(DF %>% group_by(dose) %>% 
-                      summarise(N.R = mean(normalize.response)))
-
-ggplot(DF, aes(x = dose, y = response)) +
-  geom_point(aes(colour = round))+
-  geom_path(aes(colour = round), size = 0.1) + 
-  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) + 
-  theme_bw() + theme(legend.position='none')
-
-ggplot(DF, aes(x = dose, y = normalize.response)) +
-  geom_point(aes(colour = round))+
-  geom_path(aes(colour = round), size = 0.1) + 
-  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) + 
-  theme_bw() + theme(legend.position='none')
-
 
 FIT <- function(i){
   DF <- DF1 %>% filter(chemical == Tox_chem$chemical[i]) %>% 
@@ -154,19 +188,7 @@ FIT(7)
 
 #######################
 
-Tox_chem <- dfChemdose %>% filter(screen == "Tox") 
-param2fitplot <- function (chem, model){
-  chem.no <- which(Tox_chem$chemical == chem)
-  DF <- DF1 %>% filter(chemical == Tox_chem$chemical[chem.no]) %>% 
-    group_by(round) %>% mutate(normalize.response = response/max(response))
-  DR <- as.data.frame(DF %>% group_by(dose) %>% 
-                        summarise(N.R = mean(normalize.response)))
-  tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = model)
-  fit1 <- curveFit(DR$dose, DR$N.R, eq = model, 
-                   param = c(tuneFit1$sta[1], tuneFit1$sta[2]))
-  figPlot(fit1, xlab=expression(paste("Log", "Conc. (", mu,"M)")), ylab="Inhibition (%)")
-  mtext(paste(chem, ", R2 = ", round(tuneFit1$sta[4],3)))
-}
+
 
 par(mfrow = c(3,5))
 param2fitplot("ALDRIN", "Logit")
@@ -185,24 +207,3 @@ param2fitplot("NICKEL", "Logit")
 param2fitplot("Potassium Chromate", "Logit")
 
 ########################
-
-chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
-          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "DI(2-ETHYLHEXYL)PHTHALATE")
-
-Screen_df <- DF1 %>% filter(chemical %in% chem) %>% 
-  group_by(round, chemical) %>% mutate(normalize.response = response/max(response))
-
-ggplot(Screen_df, aes(x = dose, y = response)) +
-  geom_point(aes(colour = round))+
-  geom_path(aes(colour = round), size = 0.1) + 
-  facet_wrap( ~ chemical, ncol = 5) + 
-  scale_x_log10() + theme_bw() + theme(legend.position = "top")
-
-ggplot(Screen_df, aes(x = dose, y = normalize.response)) +
-  geom_point(aes(colour = round))+
-  geom_path(aes(colour = round), size = 0.1) + 
-  facet_wrap( ~ chemical, ncol = 5) + 
-  scale_x_log10() + theme_bw() + theme(legend.position = "top")
-
-
-
