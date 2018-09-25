@@ -119,33 +119,13 @@ ggplot(Screen_df, aes(x = dose, y = response)) +
                 labels = trans_format("log10", math_format(10^.x))) 
 dev.off()
 
-png(file="chem10_norm.png",width=2400,height=3600,res=300)
-ggplot(Screen_df, aes(x = dose, y = normalize.response)) +
-  geom_point(aes(colour = round))+
-  geom_path(aes(colour = round), size = 0.1) + 
-  facet_wrap( ~ chemical, ncol = 2) + 
-  theme_bw() + theme(legend.position = "top") +
-  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) 
-dev.off()
-
-##########################
-
-DF <- DF1 %>% filter(chemical == "DDT, O,P'-") %>%
-  group_by(round) %>% mutate(normalize.response = response/max(response))
-
-DR <- as.data.frame(DF %>% group_by(dose) %>% summarise(N.R = mean(response)))
-DR <- as.data.frame(DF %>% group_by(dose) %>% summarise(N.R = mean(normalize.response)))
-tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = "Hill_two_rev")
-
-
 ##########################
 
 Tox_chem <- dfChemdose %>% filter(screen == "Tox") 
 param2fitplot <- function (chem, model){
   chem.no <- which(Tox_chem$chemical == chem)
   DF <- DF1 %>% filter(chemical == Tox_chem$chemical[chem.no]) %>% 
-    group_by(round) %>% mutate(normalize.response = response/max(response))
+    group_by(round) %>% mutate(normalize.response = response/100)
   DR <- as.data.frame(DF %>% group_by(dose) %>% 
                         summarise(N.R = mean(normalize.response)))
   tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = model)
@@ -156,48 +136,42 @@ param2fitplot <- function (chem, model){
 }
 
 png(file="Fit.png",width=4800,height=2200,res=300)
-par(mfrow = c(2,5), oma=c(0,0,2,0))
-param2fitplot("DDT, O,P'-", "Logit")
+par(mfrow = c(2,3), oma=c(0,0,2,0))
+param2fitplot("DDT, O,P'-", "Hill")
 param2fitplot("ALDRIN", "Logit")
-param2fitplot("DIELDRIN", "Logit")
-param2fitplot("CADMIUM(Chloride)", "Logit")
-param2fitplot("HEPTACHLOR", "Logit")
-param2fitplot("DDD, P,P'-", "Logit")
+#param2fitplot("DIELDRIN", "Logit")
+param2fitplot("CADMIUM(Chloride)", "Hill")
+#param2fitplot("HEPTACHLOR", "Logit")
+#param2fitplot("DDD, P,P'-", "Logit")
 #param2fitplot("MERCURIC CHLORIDE", "Weibull")
-param2fitplot("ENDOSULFAN", "Logit")
+param2fitplot("ENDOSULFAN", "Hill")
 param2fitplot("DICOFOL", "Logit")
 #param2fitplot("DI(2-ETHYLHEXYL)PHTHALATE", "Logit")
-param2fitplot("HEPTACHLOR EPOXIDE", "Logit")
-param2fitplot("CHLORPYRIFOS", "Logit")
+#param2fitplot("HEPTACHLOR EPOXIDE", "Logit")
+param2fitplot("CHLORPYRIFOS", "Hill")
 dev.off()
 
 #detach(package:plyr)
 
-Tox_chem <- dfChemdose %>% filter(screen == "Tox") 
-Tox_chem$chemical
+chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
+          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "CHLORPYRIFOS")
 
 FIT <- function(i){
-  DF <- DF1 %>% filter(chemical == Tox_chem$chemical[i]) %>% 
-    group_by(round) %>% mutate(normalize.response = response/max(response))
+  DF <- DF1 %>% filter(chemical == chem[i]) %>% 
+    group_by(round) %>% mutate(normalize.response = response/100)
   DR <- as.data.frame(DF %>% group_by(dose) %>% 
                         summarise(N.R = mean(normalize.response)))
   
-  print(Tox_chem$chemical[i])
+  print(chem[i])
   print("Hill")
   print(tuneFit(DR$dose, DR$N.R, eq = "Hill"))
   print("Logit")
   print(tuneFit(DR$dose, DR$N.R, eq = "Logit"))
   print("Weibull")
   print(tuneFit(DR$dose, DR$N.R, eq = "Weibull"))
-  print("BCL")
-  print(tuneFit(DR$dose, DR$N.R, eq = "BCL"))
-  print("BCW")
-  print(tuneFit(DR$dose, DR$N.R, eq = "BCW"))
-  print("GL")
-  print(tuneFit(DR$dose, DR$N.R, eq = "GL"))
 }
 
-FIT(7)
+FIT(1)
 
 #######################
 
