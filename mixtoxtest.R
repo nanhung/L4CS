@@ -1,5 +1,8 @@
 # devtools::install_github("lahothorn/SiTuR")
+# devtools::install_github("nanhung/mixtox")
+
 library(tukeytrend)
+
 library(mixtox)
 library(ggplot2)
 library(dplyr)
@@ -125,6 +128,16 @@ ggplot(Screen_df, aes(x = dose, y = normalize.response)) +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) 
 dev.off()
+
+##########################
+
+DF <- DF1 %>% filter(chemical == "DDT, O,P'-") %>%
+  group_by(round) %>% mutate(normalize.response = response/max(response))
+
+DR <- as.data.frame(DF %>% group_by(dose) %>% summarise(N.R = mean(response)))
+DR <- as.data.frame(DF %>% group_by(dose) %>% summarise(N.R = mean(normalize.response)))
+tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = "Hill_two_rev")
+
 
 ##########################
 
