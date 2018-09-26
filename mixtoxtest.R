@@ -172,7 +172,7 @@ FIT <- function(i){
   print(tuneFit(DR$dose, DR$N.R, eq = "Logit"))
   print("Weibull")
   print(tuneFit(DR$dose, DR$N.R, eq = "Weibull"))
-  x<-tuneFit(DR$dose, DR$N.R, eq = "Hill")
+  x<-tuneFit(DR$dose, DR$N.R, eq = "Hill", effv = 0.5)
   return(x)
 }
 
@@ -205,13 +205,27 @@ param <- matrix(a, nrow = 10, ncol = 3, byrow = T)
 colnames(param) <- c("alpha", "beta", "gamma")
 row.names(param) <- chem[c(1:6,8:11)]
 
+ECX <- ECx(model, param, effv = c(0.95, 0.90, 0.80, 0.70, 0.50))
+
+ECDF <- reshape2::melt(ECX)
+names(ECDF) <- c("chemical","ECx","conc.")
+
+png(file="EC.png",width=4800,height=2200,res=300)
+ggplot(data=ECDF) + 
+  geom_text(aes(x = ECx, y = conc.+3, label = paste0(round(conc., 2)))) +
+  geom_point(aes(x=ECx,y=conc.)) +
+  geom_line(aes(x=as.numeric(ECx),y=conc.)) +
+  facet_wrap(~reorder(chemical, conc.), nrow = 2) +
+  ylab(expression(paste("Concentration (", mu,"M)")))
+dev.off()
+
 
 aca <- caPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
 aia <- iaPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
-eeca <- caPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
-eeia <- iaPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
-udca <- caPred(model, param, mixType = "udcr", effv = rep(c(0.05, 0.1, 0.2, 0.3, 0.5), 2))
-udia <- iaPred(model, param, mixType = "udcr", effv = rep(c(0.05, 0.1, 0.2, 0.3, 0.5), 2))
+eeca <- caPred(model, param, mixType = "eecr", effv = c(0.95, 0.5))
+eeia <- iaPred(model, param, mixType = "eecr", effv = c(0.95, 0.5))
+udca <- caPred(model, param, mixType = "udcr", effv = rep(c(0.95, 0.90, 0.80, 0.70, 0.50), 2))
+udia <- iaPred(model, param, mixType = "udcr", effv = rep(c(0.95, 0.90, 0.80, 0.70, 0.50), 2))
 
 
 df0 <- reshape2::melt(aca$pct)
@@ -223,34 +237,68 @@ df1 <- reshape2::melt(eeca$pct)
 names(df1) <- c("EC","chemical","percentage")
 df1 <- ddply(df1, .(EC), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
 
+png(file="ACR.png",width=3600,height=2400,res=300)
 ggplot() + geom_bar(aes(y = percentage*100, x = Exp, fill = chemical), data = df0, stat="identity")+
   ggtitle("Percentage of individual chemicals in the ACR mixtures")+
   xlab("Design")+
   ylab("Percentage (%)")
+dev.off()
 
-ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = df, stat="identity")+
+png(file="EECR.png",width=3600,height=2400,res=300)
+ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = df1, stat="identity")+
   ggtitle("Percentage of individual chemicals in the EECR mixtures")+
-  geom_text(data=df, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
+  geom_text(data=df1, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
   xlab("Design")+
   ylab("Percentage (%)")
+dev.off()
 
 rownames(udca$unitab) <- c("u1","u2","u3","u4","u5","u6","u7","u8","u9","u10")
-colnames(udca$unitab) <- c("l1","l2","l3","l4","l5","l6","l7","l8","l9","l10")
+#colnames(udca$unitab) <- c("l1","l2","l3","l4","l5","l6","l7","l8","l9","l10")
+colnames(udca$unitab) <- chem[c(1:6,8:11)]
+
+
+
 dat <- reshape2::melt(udca$unitab) %>%
-  mutate(EC = ifelse(value %in% 1:2, "EC05",
-                     ifelse(value %in% 3:4, "EC10",
-                            ifelse(value %in% 5:6, "EC20",
-                                   ifelse(value %in% 7:8, "EC30",
+  mutate(EC = ifelse(value %in% 1:2, "EC95",
+                     ifelse(value %in% 3:4, "EC90",
+                            ifelse(value %in% 5:6, "EC80",
+                                   ifelse(value %in% 7:8, "EC70",
                                           ifelse(value %in% 9:10, "EC50", NA))))))
 
+for(i in 1:nrow(dat)){
+  for(j in colnames(udca$unitab)){
+    for(k in unique(dat$EC)){
+      if(dat$Var2[i] == j & dat$EC[i] == k){
+        dat$ECC[i] <- ECX[j,k]
+      }
+    }
+  }
+}
+
+
+png(file="UDCR.png",width=3600,height=2400,res=300)
 ggplot(data =  dat, aes(x = Var1, y = Var2)) +
   geom_tile(aes(fill = value), colour = "white") +
   geom_text(aes(label = EC), vjust = 1) +
   scale_fill_gradient(low = "white", high = "steelblue") +
-  ggtitle("Uniform Design Table") +
+  ggtitle("Uniform Design Table (ECx)") +
   xlab("number of runs (levels or pseudo-levels)") +
-  ylab("number of factors (compounds)") +
+  ylab("chemical") +
   guides(fill=FALSE)
+dev.off()
+
+png(file="UDCR-C.png",width=3600,height=2400,res=300)
+ggplot(data =  dat, aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = value), colour = "white") +
+  geom_text(aes(label = round(ECC,2)), vjust = 1) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  ggtitle("Uniform Design Table (concentration)") +
+  xlab("number of runs (levels or pseudo-levels)") +
+  ylab("chemical") +
+  guides(fill=FALSE)
+dev.off()
+
+
 
 row.names(udca$pct) <- paste("u", 1:10, sep = "")
 
@@ -258,10 +306,12 @@ df2 <- reshape2::melt(udca$pct)
 names(df2) <- c("U","chemical","percentage")
 df2 <- ddply(df2, .(U), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
 
+png(file="UDCR_pct.png",width=3600,height=2400,res=300)
 ggplot() + geom_bar(aes(y = percentage*100, x = U, fill = chemical), data = df2, stat="identity")+
   ggtitle("Percentage of individual chemicals in the UDCR mixtures")+
   geom_text(data=df2, aes(x = U, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
   xlab("Design")+
   ylab("Percentage (%)") 
+dev.off()
 
 ########################
