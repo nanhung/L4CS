@@ -125,7 +125,8 @@ Tox_chem <- dfChemdose %>% filter(screen == "Tox")
 param2fitplot <- function (chem, model){
   chem.no <- which(Tox_chem$chemical == chem)
   DF <- DF1 %>% filter(chemical == Tox_chem$chemical[chem.no]) %>% 
-    group_by(round) %>% mutate(normalize.response = response/100)
+    #group_by(round) %>% mutate(normalize.response = response/100)
+    group_by(round) %>% mutate(normalize.response = response/max(response))
   DR <- as.data.frame(DF %>% group_by(dose) %>% 
                         summarise(N.R = mean(normalize.response)))
   tuneFit1 <- tuneFit(DR$dose, DR$N.R, eq = model)
@@ -136,29 +137,31 @@ param2fitplot <- function (chem, model){
 }
 
 png(file="Fit.png",width=4800,height=2200,res=300)
-par(mfrow = c(2,3), oma=c(0,0,2,0))
-param2fitplot("DDT, O,P'-", "Hill")
-param2fitplot("ALDRIN", "Logit")
-#param2fitplot("DIELDRIN", "Logit")
-param2fitplot("CADMIUM(Chloride)", "Hill")
-#param2fitplot("HEPTACHLOR", "Logit")
-#param2fitplot("DDD, P,P'-", "Logit")
+#par(mfrow = c(2,3), oma=c(0,0,2,0))
+par(mfrow = c(2,5), oma=c(0,0,2,0))
+param2fitplot("DDT, O,P'-", "Hill") # H
+param2fitplot("ALDRIN", "Hill") # L
+param2fitplot("DIELDRIN", "Hill")
+param2fitplot("CADMIUM(Chloride)", "Hill") # H
+param2fitplot("HEPTACHLOR", "Hill")
+param2fitplot("DDD, P,P'-", "Hill")
 #param2fitplot("MERCURIC CHLORIDE", "Weibull")
-param2fitplot("ENDOSULFAN", "Hill")
-param2fitplot("DICOFOL", "Logit")
-#param2fitplot("DI(2-ETHYLHEXYL)PHTHALATE", "Logit")
-#param2fitplot("HEPTACHLOR EPOXIDE", "Logit")
-param2fitplot("CHLORPYRIFOS", "Hill")
+param2fitplot("ENDOSULFAN", "Hill") # H
+param2fitplot("DICOFOL", "Hill") #L
+param2fitplot("HEPTACHLOR EPOXIDE", "Hill")
+param2fitplot("CHLORPYRIFOS", "Hill") # H
 dev.off()
 
+######################
 #detach(package:plyr)
 
 chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
-          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "CHLORPYRIFOS")
+          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "HEPTACHLOR EPOXIDE",
+          "CHLORPYRIFOS")
 
 FIT <- function(i){
   DF <- DF1 %>% filter(chemical == chem[i]) %>% 
-    group_by(round) %>% mutate(normalize.response = response/100)
+    group_by(round) %>% mutate(normalize.response = response/max(response))
   DR <- as.data.frame(DF %>% group_by(dose) %>% 
                         summarise(N.R = mean(normalize.response)))
   
@@ -169,28 +172,96 @@ FIT <- function(i){
   print(tuneFit(DR$dose, DR$N.R, eq = "Logit"))
   print("Weibull")
   print(tuneFit(DR$dose, DR$N.R, eq = "Weibull"))
+  x<-tuneFit(DR$dose, DR$N.R, eq = "Hill")
+  return(x)
 }
 
-FIT(1)
+x01<-FIT(1)
+x02<-FIT(2)
+x03<-FIT(3)
+x04<-FIT(4)
+x05<-FIT(5)
+x06<-FIT(6)
+x07<-FIT(8)
+x08<-FIT(9)
+x09<-FIT(10)
+x10<-FIT(11)
 
 #######################
+library(plyr)
+
+model <- rep("Hill",10)
+a<-c(x01$sta[1],x01$sta[2],0,
+     x02$sta[1],x02$sta[2],0,
+     x03$sta[1],x03$sta[2],0,
+     x04$sta[1],x04$sta[2],0,
+     x05$sta[1],x05$sta[2],0,
+     x06$sta[1],x06$sta[2],0,
+     x07$sta[1],x07$sta[2],0,
+     x08$sta[1],x08$sta[2],0,
+     x09$sta[1],x09$sta[2],0,
+     x10$sta[1],x10$sta[2],0)
+param <- matrix(a, nrow = 10, ncol = 3, byrow = T)
+colnames(param) <- c("alpha", "beta", "gamma")
+row.names(param) <- chem[c(1:6,8:11)]
 
 
+aca <- caPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
+aia <- iaPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
+eeca <- caPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
+eeia <- iaPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
+udca <- caPred(model, param, mixType = "udcr", effv = rep(c(0.05, 0.1, 0.2, 0.3, 0.5), 2))
+udia <- iaPred(model, param, mixType = "udcr", effv = rep(c(0.05, 0.1, 0.2, 0.3, 0.5), 2))
 
-par(mfrow = c(3,5))
-param2fitplot("ALDRIN", "Logit")
-param2fitplot("CADMIUM(Chloride)", "Logit")
-param2fitplot("CHLORPYRIFOS", "Logit")
-param2fitplot("DDD, P,P'-", "Logit")
-param2fitplot("DDT, O,P'-", "Logit")
-param2fitplot("DDT, P,P'-", "Logit")
-param2fitplot("DICOFOL", "Logit")
-param2fitplot("DIELDRIN", "Logit")
-param2fitplot("ENDOSULFAN", "Logit")
-param2fitplot("HEPTACHLOR", "Logit")
-param2fitplot("HEPTACHLOR EPOXIDE", "Logit")
-param2fitplot("METHOXYCHLOR", "Logit")
-param2fitplot("NICKEL", "Logit")
-param2fitplot("Potassium Chromate", "Logit")
+
+df0 <- reshape2::melt(aca$pct)
+names(df0) <- c("Exp","chemical","percentage")
+df0[,2] <- chem[c(1:6,8:11)]
+df0[,1] <- rep("ECx", 10)
+
+df1 <- reshape2::melt(eeca$pct)
+names(df1) <- c("EC","chemical","percentage")
+df1 <- ddply(df1, .(EC), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
+
+ggplot() + geom_bar(aes(y = percentage*100, x = Exp, fill = chemical), data = df0, stat="identity")+
+  ggtitle("Percentage of individual chemicals in the ACR mixtures")+
+  xlab("Design")+
+  ylab("Percentage (%)")
+
+ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = df, stat="identity")+
+  ggtitle("Percentage of individual chemicals in the EECR mixtures")+
+  geom_text(data=df, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
+  xlab("Design")+
+  ylab("Percentage (%)")
+
+rownames(udca$unitab) <- c("u1","u2","u3","u4","u5","u6","u7","u8","u9","u10")
+colnames(udca$unitab) <- c("l1","l2","l3","l4","l5","l6","l7","l8","l9","l10")
+dat <- reshape2::melt(udca$unitab) %>%
+  mutate(EC = ifelse(value %in% 1:2, "EC05",
+                     ifelse(value %in% 3:4, "EC10",
+                            ifelse(value %in% 5:6, "EC20",
+                                   ifelse(value %in% 7:8, "EC30",
+                                          ifelse(value %in% 9:10, "EC50", NA))))))
+
+ggplot(data =  dat, aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = value), colour = "white") +
+  geom_text(aes(label = EC), vjust = 1) +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  ggtitle("Uniform Design Table") +
+  xlab("number of runs (levels or pseudo-levels)") +
+  ylab("number of factors (compounds)") +
+  guides(fill=FALSE)
+
+row.names(udca$pct) <- paste("u", 1:10, sep = "")
+
+df2 <- reshape2::melt(udca$pct)
+names(df2) <- c("U","chemical","percentage")
+df2 <- ddply(df2, .(U), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
+
+ggplot() + geom_bar(aes(y = percentage*100, x = U, fill = chemical), data = df2, stat="identity")+
+  ggtitle("Percentage of individual chemicals in the UDCR mixtures")+
+  geom_text(data=df2, aes(x = U, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
+  xlab("Design")+
+  ylab("Percentage (%)") 
 
 ########################
