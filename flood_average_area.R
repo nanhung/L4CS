@@ -1,32 +1,23 @@
-if(!require(dplyr)) {
-  install.packages("dplyr"); require(dplyr)
+if(!require(tidyverse)) {
+  install.packages("tidyverse"); require(tidyverse)
 }
 
 df<-read.csv("Calculatedarea_HarrisCounty_Flood_Intersect_CSTlevel.csv")
 df$NAME <- as.factor(df$NAME)
 
 df1 <- df %>% group_by(NAME, FloodYear) %>% 
-  summarise(Sum_Shape_Area = sum(Shape_Area))
+  summarise(Sum_Shape_Area = sum(Shape_Area)) %>% 
+  as.data.frame() %>%
+  mutate(Sum_Shape_Area = replace_na(Sum_Shape_Area, 0)) %>%
+  spread(key = FloodYear, value = Sum_Shape_Area) %>%
+  replace_na(list(`0` = 0, `100` = 0, `500` = 0)) %>%
+  mutate(Total_area = `0`+`100`+`500`) %>%
+  mutate(Total_area = replace_na(Total_area, 0)) %>%
+  mutate(pct_000_area = `0`/Total_area) %>%
+  mutate(pct_100_area = `100`/Total_area) %>%
+  mutate(pct_500_area = `500`/Total_area)
 
-df1$average_area <- df1$FloodYear / df1$Sum_Shape_Area 
+df1$`<NA>` <- NULL
 
-unique(df$NAME)
-unique(df$FloodYear)
-
-x<-rep(NA, nrow(df))
-
-for(i in 1:nrow(df)){
-  for(j in unique(df$NAME)){
-    for(k in unique(df$FloodYear)){
-      if(df$NAME[i] == j & df$FloodYear[i] == k){
-        x[i] <- as.numeric(df1[ which(df1$NAME==j & df1$FloodYear == k), "average_area"])
-      }
-    }
-  }
-}
-
-df$average_area <- x
-
-write.csv(df, file = "flood_average_area.csv", row.names=FALSE)
 write.csv(df1, file = "flood_average_area_(sum).csv", row.names=FALSE)
 
