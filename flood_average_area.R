@@ -5,10 +5,10 @@ if(!require(tidyverse)) {
 ###############
 
 df<-read.csv("EPA_NATA_2014_HCG.csv")
-names(df)[5:40]
+names(df)
 
-df1 <- df %>% group_by(TRACT, COUNTY, FIPS) %>% 
-  summarise_at(names(df)[5:40], mean, na.rm = TRUE)
+df1 <- df %>% group_by(TRACT, COUNTY, FIPS, population) %>% 
+  summarise_at(names(df)[6:40], sum, na.rm = TRUE)
 
 write.csv(df1, file = "TRACT_flood_sum.csv", row.names=FALSE)
 
