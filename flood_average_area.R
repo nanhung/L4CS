@@ -2,6 +2,18 @@ if(!require(tidyverse)) {
   install.packages("tidyverse"); require(tidyverse)
 }
 
+###############
+
+df<-read.csv("EPA_NATA_2014_HCG.csv")
+names(df)[5:40]
+
+df1 <- df %>% group_by(TRACT, COUNTY, FIPS) %>% 
+  summarise_at(names(df)[5:40], mean, na.rm = TRUE)
+
+write.csv(df1, file = "TRACT_flood_sum.csv", row.names=FALSE)
+
+################
+
 df<-read.csv("Calculatedarea_HarrisCounty_Flood_Intersect_CSTlevel.csv")
 df$GEOID <- as.factor(df$GEOID)
 
