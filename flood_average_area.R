@@ -3,9 +3,9 @@ if(!require(tidyverse)) {
 }
 
 df<-read.csv("Calculatedarea_HarrisCounty_Flood_Intersect_CSTlevel.csv")
-df$NAME <- as.factor(df$NAME)
+df$GEOID <- as.factor(df$GEOID)
 
-df1 <- df %>% group_by(NAME, FloodYear) %>% 
+df1 <- df %>% group_by(GEOID, FloodYear) %>% 
   summarise(Sum_Shape_Area = sum(Shape_Area)) %>% 
   as.data.frame() %>%
   mutate(Sum_Shape_Area = replace_na(Sum_Shape_Area, 0)) %>%
