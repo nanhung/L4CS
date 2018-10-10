@@ -222,8 +222,8 @@ dev.off()
 
 aca <- caPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
 aia <- iaPred(model, param, mixType = "acr", effv = c(rep(0.5, 10)))
-eeca <- caPred(model, param, mixType = "eecr", effv = c(0.95, 0.5))
-eeia <- iaPred(model, param, mixType = "eecr", effv = c(0.95, 0.5))
+eeca <- caPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
+eeia <- iaPred(model, param, mixType = "eecr", effv = c(0.05, 0.5))
 udca <- caPred(model, param, mixType = "udcr", effv = rep(c(0.95, 0.90, 0.80, 0.70, 0.50), 2))
 udia <- iaPred(model, param, mixType = "udcr", effv = rep(c(0.95, 0.90, 0.80, 0.70, 0.50), 2))
 
@@ -298,8 +298,6 @@ ggplot(data =  dat, aes(x = Var1, y = Var2)) +
   guides(fill=FALSE)
 dev.off()
 
-
-
 row.names(udca$pct) <- paste("u", 1:10, sep = "")
 
 df2 <- reshape2::melt(udca$pct)
@@ -315,3 +313,19 @@ ggplot() + geom_bar(aes(y = percentage*100, x = U, fill = chemical), data = df2,
 dev.off()
 
 ########################
+
+png(file="MixTox.png",width=3600,height=1800,res=300)
+par(mfrow = c(1,2))
+plot(eeca$ca[1, ], eeca$e * 100, type = "l", xlab = expression(paste("Concentration (", mu,"M)")), 
+     ylab = "Percentage (%)", main = "Equal-effect design")
+lines(eeca$ca[2, ], eeca$e * 100, col = i)
+legend("topright", legend=c("EC05", "EC50"), col=c(1, 2), lty = 1, cex=0.8)
+
+plot(udca$ca[1, ], eeia$e * 100, type = "l", xlab = expression(paste("Concentration (", mu,"M)")), 
+     ylab = "Percentage (%)", main = "Uniform design")
+for(i in 2:10){
+  lines(udca$ca[i, ], eeia$e * 100, col = i)
+}
+legend("topright", legend=paste("U", 1 : 10, sep = ""), col=c(1:10), lty = 1, cex=0.8)
+dev.off()
+
