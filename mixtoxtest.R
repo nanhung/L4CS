@@ -314,15 +314,18 @@ dev.off()
 
 ########################
 
-png(file="MixTox.png",width=3600,height=1800,res=300)
-par(mfrow = c(1,2))
+png(file="MixTox.png",width=3600,height=3200,res=300)
+par(mfrow = c(2,2))
+plot(aca$ca, aca$e * 100, type = "l", xlab = expression(paste("Concentration (", mu,"M)")),
+     ylab = "Percentage (%)", main = "Arbitary design", xlim=c(0,90))
+
 plot(eeca$ca[1, ], eeca$e * 100, type = "l", xlab = expression(paste("Concentration (", mu,"M)")), 
-     ylab = "Percentage (%)", main = "Equal-effect design")
+     ylab = "Percentage (%)", main = "Equal-effect design", xlim=c(0,90))
 lines(eeca$ca[2, ], eeca$e * 100, col = i)
 legend("topright", legend=c("EC05", "EC50"), col=c(1, 2), lty = 1, cex=0.8)
 
 plot(udca$ca[1, ], eeia$e * 100, type = "l", xlab = expression(paste("Concentration (", mu,"M)")), 
-     ylab = "Percentage (%)", main = "Uniform design")
+     ylab = "Percentage (%)", main = "Uniform design", xlim=c(0,90))
 for(i in 2:10){
   lines(udca$ca[i, ], eeia$e * 100, col = i)
 }
