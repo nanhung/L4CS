@@ -39,6 +39,7 @@ DR <- function(i){
   df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[i])
   df <- as.data.frame(df)
   
+  df[,1] <- c("AC50 mn", "POD mn", "RfD mx", "Expo mx", "Expo mn", "AC50 mx", "POD mx", "RfD mn")
   colnames(df)<-c("chemical", 
                   "1_r1","1_r2","1_r3","1_r4","1_r5","1_r6",
                   "2_r1","2_r2","2_r3","2_r4","2_r5","2_r6",
@@ -63,8 +64,12 @@ pdf("mix-DR.pdf", 11, 6)
 DR(2);DR(3);DR(4);DR(5);DR(6);DR(7);DR(8);DR(9);DR(10);DR(11) 
 dev.off()
 
-png(file="mix-DR.png",width=6400,height=3600,res=300)
+png(file="mix-DR.png",width=6800,height=3200,res=300)
 grid.arrange(DR(2), DR(3), DR(4), DR(5), 
              DR(6), DR(7), DR(8), DR(9),
              DR(10), DR(11), ncol=5)
+dev.off()
+
+png(file="mix-DR.png",width=3200,height=1800,res=300)
+DR(3)
 dev.off()

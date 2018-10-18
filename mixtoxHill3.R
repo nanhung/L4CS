@@ -13,6 +13,12 @@ colnames(DF1)[4]<-"response"
 chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
           "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "CHLORPYRIFOS")
 
+df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+df <- data.frame(df[,c(2,6:13)])
+names(df) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
+
+df[37,1] <- "CADMIUM(Chloride)"
+
 plotFit <- function(i, init_n = 1){
   DF <- DF1 %>% filter(chemical == chem[i]) %>% group_by(round) 
   
@@ -82,10 +88,15 @@ plotFit <- function(i, init_n = 1){
   lines(px,CI.low, col = 2, lwd = 1, lty = 2)
   lines(px,PI.up, col = 4, lwd = 1, lty = 2)
   lines(px,PI.low, col = 4, lwd = 1, lty = 2)
-  
+  min <- log(df[which(df[,1] == chem[i]), "AC50 min"], 10)
+  max <- log(df[which(df[,1] == chem[i]), "AC50 max"], 10)   
+  polygon(c(min, max, max, min), c(2 , 2, -1, -1), col=rgb(1, 0, 0,0.1), border=NA)
+
   print(list(p = paramHat, sta = sta))
 }
 
+png(file="ind-DR.png",width=4800,height=2000,res=300)
+par(mfrow = c(2,5))
 plotFit(1)
 plotFit(2)
 plotFit(3)
@@ -96,4 +107,8 @@ plotFit(7)
 plotFit(8, init_n = 6)
 plotFit(9)
 plotFit(10)
+dev.off()
+
+
+
 
