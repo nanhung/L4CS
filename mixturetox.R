@@ -14,7 +14,7 @@ RName<-as.matrix(df[,2])
 
 df <- data.frame(df[,c(6:13)])
 row.names(df) <- RName
-names(df) <- c("AC50 min","AC50 Max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
+names(df) <- c("AC50 min","AC50 Max","Expo min","Expo max","POD min","POD max","RFD min","RFD max")
 
 DF <- df %>% as.matrix() %>%
   reshape::melt() %>% 

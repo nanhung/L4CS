@@ -27,6 +27,16 @@ dfChemCoef <- tidy(dfChem, fitw)
 dfChemdose <- dfChemCoef %>% filter(term %in% "dose") %>% 
   mutate(screen = ifelse(p.value < 0.001 & estimate < 0, "Tox", "Non-Tox"))
 
+#####
+df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+df <- data.frame(df[,c(6:13)])
+row.names(df) <- unique(DF1$chemical)
+names(df) <- c("AC50 min","AC50 Max","Expo min","Expo max","POD min","POD max","RFD min","RFD max")
+min <- df[,1]
+max <- df[,2]
+chemical  <- unique(DF1$chemical)
+ref <- data.frame(chemical, min, max)
+#####
 
 png(file="dose_response.png",width=5200,height=3600,res=300)
 ggplot(DF1, aes(x = dose, y = response)) +
@@ -34,7 +44,9 @@ ggplot(DF1, aes(x = dose, y = response)) +
   geom_path(aes(colour = round), size = 0.1) + 
   facet_wrap( ~ chemical, ncol = 6) + theme_bw() +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x)))
+                labels = trans_format("log10", math_format(10^.x))) + 
+  geom_vline(aes(xintercept=min), ref,  colour="#990000", linetype="dashed") + 
+  geom_vline(aes(xintercept=max), ref,  colour="#990000", linetype="dashed")
 dev.off()
 
 png(file="significant_test.png",width=3600,height=2800,res=300)
