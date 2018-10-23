@@ -36,6 +36,15 @@ ggplot(DF, aes(x = reorder(chemical, dose), y=dose, label = response)) +
 dev.off()
 
 DR <- function(i){
+  sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
+  c.df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+  pct <- 1/42
+  c.df$pct.MW.POD.H <- c.df$`Molecular weight` * pct
+  c.df$ugl <- c.df$`Molecular weight` * c.df$POD.Highest
+  mix.MW <- sum(c.df$pct.MW.POD.H)
+  mix.ugl <- mean(c.df$ugl)
+  mixuM <- mix.ugl / mix.MW
+
   df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[i])
   df <- as.data.frame(df)
   
@@ -48,10 +57,11 @@ DR <- function(i){
                   "5_r1","5_r2","5_r3","5_r4","5_r5","5_r6")
   DF <- df %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
   DF$dosen <- as.numeric(DF$dose)
-  DF1 <- DF %>% mutate(dilution = 10^(dosen-5))
+  DF1 <- DF %>% mutate(dilution = 10^(dosen-5)) %>% mutate(conc = 10^(dosen-5) * mixuM)
   colnames(DF1)[4]<-"response"
   
-  ggplot(DF1, aes(x = dilution, y = response)) +
+#  ggplot(DF1, aes(x = dilution, y = response)) +
+   ggplot(DF1, aes(x = conc, y = response)) +
     geom_point(aes(colour = round))+
     geom_path(aes(colour = round), size = 0.1) + 
     facet_wrap( ~ chemical, ncol = 4) + theme_bw() +
@@ -73,3 +83,18 @@ dev.off()
 png(file="mix-DR.png",width=3200,height=1800,res=300)
 DR(3)
 dev.off()
+
+
+#############
+
+sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
+df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+pct <- 1/42
+df$pct.MW.POD.H <- df$`Molecular weight` * pct
+df$ugl <- df$`Molecular weight`* df$POD.Highest
+
+
+mix.MW <- sum(df$pct.MW.POD.H)
+mix.ugl <- mean(df$ugl)
+mixuM <- mix.ugl / mix.MW
+
