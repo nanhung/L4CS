@@ -2,22 +2,21 @@ library(dplyr)
 library(tidyr) #seperate
 library(minpack.lm)
 
-df <- read.csv("mixtoxtest.csv")
-colnames(df)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
-                "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
-DF <- df %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
+df1 <- read.csv("mixtoxtest.csv")
+sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
+df2 <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+df1[,1] <- df2[,2]
+colnames(df1)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
+                 "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
+DF <- df1 %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
 DF$dosen <- as.numeric(DF$dose)
 DF1 <- DF %>% mutate(dose = 10^(dosen-3))
 colnames(DF1)[4]<-"response"
 
-chem <- c("DDT, O,P'-", "ALDRIN", "DIELDRIN", "CADMIUM(Chloride)", "HEPTACHLOR",
-          "DDD, P,P'-", "MERCURIC CHLORIDE", "ENDOSULFAN", "DICOFOL", "CHLORPYRIFOS")
+df2 <- data.frame(df2[,c(2,6:13)])
+names(df2) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
 
-df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
-df <- data.frame(df[,c(2,6:13)])
-names(df) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
-
-df[37,1] <- "CADMIUM(Chloride)"
+chem <- df1[,1]
 
 plotFit <- function(i, init_n = 1){
   DF <- DF1 %>% filter(chemical == chem[i]) %>% group_by(round) 
@@ -81,34 +80,49 @@ plotFit <- function(i, init_n = 1){
   CI.low <- py - probT * gap.CI # CI lower bound
   crcInfo <- cbind(px, py, PI.low, PI.up, CI.low, CI.up)
   
-  plot(log(DF$dose, 10), DF$response/100, pch = 19, col="darkgrey", main = chem[i],
+  plot(log(DF$dose, 10), DF$response/100, pch = 19, col="darkgrey", main = paste(chem[i], "; r2 =", round(sta[1],2)),
        xlab=expression(paste("Log", "Conc. (", mu,"M)")), ylab="Response (%)")
   lines(px,py, col = 1, lwd = 2)
   lines(px,CI.up, col = 2, lwd = 1, lty = 2)
   lines(px,CI.low, col = 2, lwd = 1, lty = 2)
   lines(px,PI.up, col = 4, lwd = 1, lty = 2)
   lines(px,PI.low, col = 4, lwd = 1, lty = 2)
-  min <- log(df[which(df[,1] == chem[i]), "AC50 min"], 10)
-  max <- log(df[which(df[,1] == chem[i]), "AC50 max"], 10)   
+  #
+  min <- log(df2[which(df2[,1] == chem[i]), "AC50 min"], 10)
+  max <- log(df2[which(df2[,1] == chem[i]), "AC50 max"], 10)   
+  #
   polygon(c(min, max, max, min), c(2 , 2, -1, -1), col=rgb(1, 0, 0,0.1), border=NA)
 
   print(list(p = paramHat, sta = sta))
 }
 
-png(file="ind-DR.png",width=4800,height=2000,res=300)
-par(mfrow = c(2,5))
-plotFit(1)
-plotFit(2)
-plotFit(3)
+png(file="ind-DR.png",width=4800,height=2800,res=300)
+par(mfrow = c(4,6))
 plotFit(4)
 plotFit(5)
 plotFit(6)
 plotFit(7)
-plotFit(8, init_n = 6)
-plotFit(9)
-plotFit(10)
+plotFit(12)
+plotFit(15)
+plotFit(16)
+plotFit(18)
+plotFit(19)
+plotFit(20)
+plotFit(22)
+plotFit(23)
+plotFit(25)
+plotFit(27, init_n = 6)
+plotFit(28)
+plotFit(31)
+plotFit(33)
+plotFit(36)
+plotFit(37)
+plotFit(39)
+plotFit(40)
+plotFit(41)
+plotFit(42)
 dev.off()
 
-
+plotFit(8, init_n = 6)
 
 

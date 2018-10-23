@@ -38,6 +38,8 @@ chemical  <- unique(DF1$chemical)
 ref <- data.frame(chemical, min, max)
 #####
 
+DF1$chemical <- factor(DF1$chemical, levels = row.names(df))
+
 png(file="dose_response.png",width=5200,height=3600,res=300)
 ggplot(DF1, aes(x = dose, y = response)) +
   geom_point(aes(colour = round))+
