@@ -89,10 +89,10 @@ dev.off()
 
 sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
 df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
-pct <- 1/42
-df$pct.MW.POD.H <- df$`Molecular weight` * pct
 df$ugl <- df$`Molecular weight`* df$POD.Highest
-
+total_weight <- sum(df$ugl)
+df$pct <- df$ugl/total_weight
+df$pct.MW.POD.H <- df$`Molecular weight` * df$pct
 
 mix.MW <- sum(df$pct.MW.POD.H)
 mix.ugl <- mean(df$ugl)
