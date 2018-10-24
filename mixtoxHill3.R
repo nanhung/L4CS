@@ -186,9 +186,8 @@ effv_est <- function(i, init_n = 1){
 
 sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
 df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
-df$ugl <- df$`Molecular weight`* df$POD.Highest
-total_weight <- sum(df$ugl)
-effv <- df$ugl/total_weight
+total_POD <- sum(df$POD.Highest)
+effv <- df$POD.Highest/total_POD
 
 effPoints <- rev((c(0.025, 0.03, 0.05, 0.1, 0.15, 0.2, 
                     0.25, 0.3, 0.35, 0.4, 0.45, 0.47, 0.5, 0.52, 
