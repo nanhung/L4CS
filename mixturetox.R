@@ -224,7 +224,10 @@ effv_est <- function(i, init_n = 1){
   return(y)  
 }
 
+
 effv <- df2$`POD max` / sum(df2$`POD max`)
+
+
 effPoints <- rev((c(0.025, 0.03, 0.05, 0.1, 0.15, 0.2, 
                     0.25, 0.3, 0.35, 0.4, 0.45, 0.47, 0.5, 0.52, 
                     0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.999)))
@@ -292,12 +295,39 @@ effPoints<- c(0.999, effPoints)
 x<-filter(DF1, effect == "cellnum")["conc"] %>% as.matrix()
 y<-filter(DF1, effect == "cellnum")["response"]/100
 
+
+png(file="mix-ca.png",width=3600,height=2800,res=300)
 plot(x,as.matrix(y), log = "x", pch = 19, 
      main = "Concentration addition",
      xlab = "log(c) mol/L", ylab = "Inhibition (%)")
 lines(ca, effPoints, lwd = 2, col = 2)
+dev.off()
 
+##########################
 
+effv_POD_min <- df2$`POD min` / sum(df2$`POD min`)
+effv_POD_max <- df2$`POD max` / sum(df2$`POD max`)
+effv_AC50_min <- df2$`AC50 min` / sum(df2$`AC50 min`)
+effv_AC50_max <- df2$`AC50 max` / sum(df2$`AC50 max`)
+effv_Expo_max <- df2$`Expo max` / sum(df2$`Expo max`)
+effv_Expo_min <- df2$`Expo min` / sum(df2$`Expo min`)
+effv_RFD_min <- df2$`RFD min` / sum(df2$`RFD min`)
+effv_RFD_max <- df2$`RFD max` / sum(df2$`RFD max`)
 
+X <- data.frame(effv_AC50_min, effv_AC50_max,
+                effv_Expo_min, effv_Expo_max, effv_POD_min, effv_POD_max, effv_RFD_min, effv_RFD_max)
 
+row.names(X) <- df2[,1]
+colnames(X) <- c("AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
 
+pct_df <- X %>% as.matrix() %>% reshape2::melt()
+names(pct_df) <- c("chemical", "EC", "percentage")
+pct_df <- ddply(pct_df, .(EC), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
+
+png(file="mixtox-3.png",width=4800,height=2800,res=300)
+ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = pct_df, stat="identity")+
+  ggtitle("Percentage of individual chemicals in the mixtures")+
+  #geom_text(data=pct_df, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
+  xlab("Design")+ scale_fill_viridis(discrete=TRUE) +
+  ylab("Percentage (%)")
+dev.off()

@@ -90,10 +90,10 @@ plotFit <- function(i, init_n = 1){
   lines(px,PI.up, col = 4, lwd = 1, lty = 2)
   lines(px,PI.low, col = 4, lwd = 1, lty = 2)
   #
-  min <- log(df2[which(df2[,1] == chem[i]), "POD min"], 10)
-  max <- log(df2[which(df2[,1] == chem[i]), "POD max"], 10)   
+  #min <- log(df2[which(df2[,1] == chem[i]), "POD min"], 10)
+  #max <- log(df2[which(df2[,1] == chem[i]), "POD max"], 10)   
   #
-  polygon(c(min, max, max, min), c(2 , 2, -1, -1), col=rgb(1, 0, 0,0.1), border=NA)
+  #polygon(c(min, max, max, min), c(2 , 2, -1, -1), col=rgb(1, 0, 0,0.1), border=NA)
 
   print(list(p = paramHat, sta = sta))
 }
