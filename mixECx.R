@@ -1,3 +1,56 @@
+Fit <- function(i, init_n = 1, effect = sheets[3]){
+  
+  df <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = effect)
+  colnames(df)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
+                   "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
+  DF <- df %>% as.data.frame() %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
+  DF$dosen <- as.numeric(DF$dose)
+  DF2 <- DF %>% mutate(dose = 10^(dosen-3))
+  colnames(DF2)[4]<-"response"
+  
+  DF <- DF2 %>% filter(chemical == chem[i,]) %>% group_by(round) 
+  
+  x <- DF$dose
+  y <- DF$response/100
+  
+  n <- length(DF$dose)
+  m <- 3
+  
+  Alpha <- 20
+  Beta <- 1
+  param <- c(Alpha, Beta)
+  
+  fun <- 'y ~ Beta / (1 + x/Alpha)'
+  
+  dframe <- data.frame(x, y)
+  fit1 <- minpack.lm::nlsLM(fun, data = dframe, start = list(Alpha = param[1], Beta = param[2]))
+  
+  fun <- paste('y ~', coef(fit1)[2], '/ (1 + (x/Alpha)^Beta)')
+  fit2 <- minpack.lm::nlsLM(fun, data = dframe, start = list(Alpha = coef(fit1)[1], Beta = init_n))
+  
+  paramHat <- c(coef(fit2)[1], coef(fit2)[2], coef(fit1)[2])
+  names(paramHat) <- c("EC50", "n", "Emax")
+  
+  fitInfo <- summary(fit2) # fitting information	
+  yhat <- paramHat[3] / (1 + (x/paramHat[1])^paramHat[2])
+  
+  sst <- sum((y - mean(y))^2) # total sum of squares
+  sse <- sum((y - yhat)^2) # sum of squared errors
+  r2 <- 1 - sse / sst # coefficient of determination
+  adjr2 <- 1 - sse * (n - 1) / (sst * (n - m)) # adjusted coefficient of determination
+  rmse <- sqrt(sse / (n - m)) # root-mean-square error
+  mae <- sum(abs(y - yhat)) / n # mean absolute error
+  lnL <- 0.5 * (-n * (log(2 * pi) + 1 - log(n) + log(sse)))
+  aic <- 2 * m - 2 * lnL # Akaike information criterion 
+  aicc <- aic + 2 * m * (m + 1) / (n - m - 1)
+  bic <- m * log(n) - 2 * lnL # Bayesian information criterion
+  sta <- t(c(r2, adjr2, mae, rmse, aic, aicc, bic))
+  colnames(sta) <- c('r2', 'adjr2', 'MAE', 'RMSE', 'AIC', 'AICc', 'BIC')
+  
+  list(p = paramHat, sta = sta)  
+}
+
+
 ECx <- function(model, param, effv, rtype = 'continuous', Scaled = TRUE){
   #calculate effect concentrations using associated inverse function
   if (missing(model) || missing (param)) stop('argument missing')
