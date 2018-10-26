@@ -210,6 +210,7 @@ DF$dosen <- as.numeric(DF$dose)
 DF2 <- DF %>% mutate(dose = 10^(dosen-3))
 colnames(DF2)[4]<-"response"
 
+df3 <- df2
 df2 <- data.frame(df2[,c(2,6:13)])
 names(df2) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
 
@@ -225,7 +226,9 @@ effv_est <- function(i, init_n = 1){
 }
 
 
-effv <- df2$`POD max` / sum(df2$`POD max`)
+ugl.POD.H <- df2$`POD max` * df3$`Molecular weight`
+
+effv <- ugl.POD.H / sum(ugl.POD.H)
 
 
 effPoints <- rev((c(0.025, 0.03, 0.05, 0.1, 0.15, 0.2, 
@@ -289,17 +292,17 @@ concAdd <- function(pctEcx, effPoints) {
 
 ca <- concAdd(pctEcx, rev(effPoints))
 
-ca <- c(10e-5, as.numeric(ca))
+ca <- c(10e-3, as.numeric(ca))
 effPoints<- c(0.999, effPoints)
 
-x<-filter(DF1, effect == "cellnum")["conc"] %>% as.matrix()
-y<-filter(DF1, effect == "cellnum")["response"]/100
+x<-filter(DF1, effect == "cellnum" & chemical == "POD mx")["conc"] %>% as.matrix()
+y<-filter(DF1, effect == "cellnum" & chemical == "POD mx")["response"]/100
 
 
 png(file="mix-ca.png",width=3600,height=2800,res=300)
 plot(x,as.matrix(y), log = "x", pch = 19, 
      main = "Concentration addition",
-     xlab = "log(c) mol/L", ylab = "Inhibition (%)")
+     xlab = "log(c) umol/L", ylab = "Inhibition (%)")
 lines(ca, effPoints, lwd = 2, col = 2)
 dev.off()
 
