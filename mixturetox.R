@@ -1,9 +1,13 @@
+#install.packages(c("ggplot2","dplyr", "tidyr", "scales", "readxl", "gridExtra"))
+
+library(plyr)
 library(ggplot2)
 library(dplyr)
 library(tidyr) #seperate
 library(scales)
 library(readxl)
 library(gridExtra)
+library(reshape2)
 
 # df <- read.csv("mixture.csv")
 
@@ -16,62 +20,73 @@ df <- data.frame(df[,c(6:13)])
 row.names(df) <- RName
 names(df) <- c("AC50 min","AC50 Max","Expo min","Expo max","POD min","POD max","RFD min","RFD max")
 
-DF <- df %>% as.matrix() %>%
+X <- df %>% as.matrix() %>%
   reshape::melt() %>% 
   magrittr::set_colnames(c("chemical", "response", "dose"))
 
 df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
 
-df$ugl.AC50.L <- df$`Molecular weight` * df$`Min. AC50`
-df$ugl.AC50.H <- df$`Molecular weight` * df$`Max. AC50`
-df$ugl.Css.L <- df$`Molecular weight` * df$Css.medExpos_medRTK.plasma.uM
-df$ugl.Css.H <- df$`Molecular weight` * df$Css.95percExpos_95RTK.plasma.uM
-df$ugl.RFD.L <- df$`Molecular weight` * df$RFD.Low
-df$ugl.RFD.H <- df$`Molecular weight` * df$RFD.High
-df$ugl.POD.L <- df$`Molecular weight` * df$POD.Lowest
-df$ugl.POD.H <- df$`Molecular weight` * df$POD.Highest
 
-df$pct.MW.AC50.L <- df$`Molecular weight` * df$ugl.AC50.L / sum(df$ugl.AC50.L)
-df$pct.MW.AC50.H <- df$`Molecular weight` * df$ugl.AC50.H / sum(df$ugl.AC50.H)
-df$pct.MW.Css.L <- df$`Molecular weight` * df$ugl.Css.L /sum(df$ugl.Css.L)
-df$pct.MW.Css.H <- df$`Molecular weight` * df$ugl.Css.H /sum(df$ugl.Css.H)
-df$pct.MW.RFD.L <- df$`Molecular weight` * df$ugl.RFD.L /sum(df$ugl.RFD.L)
-df$pct.MW.RFD.H <- df$`Molecular weight` * df$ugl.RFD.H /sum(df$ugl.RFD.H)
-df$pct.MW.POD.L <- df$`Molecular weight` * df$ugl.POD.L /sum(df$ugl.POD.L)
-df$pct.MW.POD.H <- df$`Molecular weight` * df$ugl.POD.H /sum(df$ugl.POD.H)
+df$pct.MW.AC50.L <- df$`Min. AC50` / sum(df$`Min. AC50`)
+df$pct.MW.AC50.H <- df$`Max. AC50` / sum(df$`Max. AC50`)
+df$pct.MW.Css.L <- df$Css.medExpos_medRTK.plasma.uM /sum(df$Css.medExpos_medRTK.plasma.uM)
+df$pct.MW.Css.H <- df$Css.95percExpos_95RTK.plasma.uM /sum(df$Css.95percExpos_95RTK.plasma.uM)
+df$pct.MW.RFD.L <- df$RFD.Low /sum(df$RFD.Low)
+df$pct.MW.RFD.H <- df$RFD.High /sum(df$RFD.High)
+df$pct.MW.POD.L <- df$POD.Lowest /sum(df$POD.Lowest)
+df$pct.MW.POD.H <- df$POD.Highest /sum(df$POD.Highest)
 
 #
 mix.MW.AC50.L <- sum(df$pct.MW.AC50.L)
-mix.ugl.AC50.L <- mean(df$ugl.AC50.L)
-mixuM.AC50.L <- mix.ugl.AC50.L / mix.MW.AC50.L
+mix.AC50.L <- mean(df$`Min. AC50`)
+mixuM.AC50.L <- mix.AC50.L / mix.MW.AC50.L
 
 mix.MW.AC50.H <- sum(df$pct.MW.AC50.H)
-mix.ugl.AC50.H <- mean(df$ugl.AC50.H)
-mixuM.AC50.H <- mix.ugl.AC50.H / mix.MW.AC50.H
+mix.AC50.H <- mean(df$`Max. AC50`)
+mixuM.AC50.H <- mix.AC50.H / mix.MW.AC50.H
 
 mix.MW.Css.L <- sum(df$pct.MW.Css.L)
-mix.ugl.Css.L <- mean(df$ugl.Css.L)
-mixuM.Css.L <- mix.ugl.Css.L / mix.MW.Css.L
+mix.Css.L <- mean(df$Css.medExpos_medRTK.plasma.uM)
+mixuM.Css.L <- mix.Css.L / mix.MW.Css.L
 
 mix.MW.Css.H <- sum(df$pct.MW.Css.H)
-mix.ugl.Css.H <- mean(df$ugl.Css.H)
-mixuM.Css.H <- mix.ugl.Css.H / mix.MW.Css.H
+mix.Css.H <- mean(df$Css.95percExpos_95RTK.plasma.uM)
+mixuM.Css.H <- mix.Css.H / mix.MW.Css.H
 
 mix.MW.RFD.L <- sum(df$pct.MW.RFD.L)
-mix.ugl.RFD.L <- mean(df$ugl.RFD.L)
-mixuM.RFD.L <- mix.ugl.RFD.L / mix.MW.RFD.L
+mix.RFD.L <- mean(df$RFD.Low)
+mixuM.RFD.L <- mix.RFD.L / mix.MW.RFD.L
 
 mix.MW.RFD.H <- sum(df$pct.MW.RFD.H)
-mix.ugl.RFD.H <- mean(df$ugl.RFD.H)
-mixuM.RFD.H <- mix.ugl.RFD.H / mix.MW.RFD.H
+mix.RFD.H <- mean(df$RFD.High)
+mixuM.RFD.H <- mix.RFD.H / mix.MW.RFD.H
 
 mix.MW.POD.L <- sum(df$pct.MW.POD.L)
-mix.ugl.POD.L <- mean(df$ugl.POD.L)
-mixuM.POD.L <- mix.ugl.POD.L / mix.MW.POD.L
+mix.POD.L <- mean(df$POD.Lowest)
+mixuM.POD.L <- mix.POD.L / mix.MW.POD.L
 
 mix.MW.POD.H <- sum(df$pct.MW.POD.H)
-mix.ugl.POD.H <- mean(df$ugl.POD.H)
-mixuM.POD.H <- mix.ugl.POD.H / mix.MW.POD.H
+mix.POD.H <- mean(df$POD.Highest)
+mixuM.POD.H <- mix.POD.H / mix.MW.POD.H
+
+effv_POD_min <- df$POD.Lowest / sum(df$POD.Lowest)
+effv_POD_max <- df$POD.Highest / sum(df$POD.Highest)
+effv_AC50_min <- df$`Min. AC50` / sum(df$`Min. AC50`)
+effv_AC50_max <- df$`Max. AC50` / sum(df$`Max. AC50`)
+effv_Expo_max <- df$Css.medExpos_medRTK.plasma.uM / sum(df$Css.medExpos_medRTK.plasma.uM)
+effv_Expo_min <- df$Css.95percExpos_95RTK.plasma.uM / sum(df$Css.95percExpos_95RTK.plasma.uM)
+effv_RFD_min <- df$RFD.Low / sum(df$RFD.Low)
+effv_RFD_max <- df$RFD.High / sum(df$RFD.High)
+
+X <- data.frame(effv_AC50_min, effv_AC50_max,
+                effv_Expo_min, effv_Expo_max, effv_POD_min, effv_POD_max, effv_RFD_min, effv_RFD_max)
+
+row.names(X) <- as.matrix(df[,2])
+colnames(X) <- c("AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
+
+pct_df <- X %>% as.matrix() %>% reshape2::melt()
+names(pct_df) <- c("chemical", "EC", "percentage")
+pct_df <- plyr::ddply(pct_df, .(EC), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
 
 df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[2])
 df <- as.data.frame(df)
@@ -122,15 +137,22 @@ for (i in 3:11) {
   DF1 <- rbind(DF1, DF2) 
 }
 
-
 ############
+
+png(file="mixtox-3.png",width=4800,height=2800,res=300)
+ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = pct_df, stat="identity")+
+  ggtitle("Percentage of individual chemicals in the mixtures")+
+  #geom_text(data=pct_df, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
+  xlab("Design")+ viridis::scale_fill_viridis(discrete=TRUE) +
+  ylab("Percentage (%)")
+dev.off()
 
 png(file="index-DR.png",width=6600,height=4800,res=300)
 #pdf("index-DR.pdf", 22, 16)
-ggplot(DF, aes(x = reorder(chemical, dose), y=dose, label = response)) +
+ggplot(X, aes(x = reorder(chemical, dose), y=dose, label = response)) +
   geom_path(linetype = 1, color = "grey40") +
   geom_label(size = 4, aes(fill = response)) +
-  xlab(expression('chemical'))+
+  xlab('chemical')+
   ylab("reponse conc.") +
   scale_y_log10(
     breaks = scales::trans_breaks("log10", function(x) 10^x, n= 4),
@@ -184,7 +206,7 @@ dev.off()
 
 
 p <- ggplot(DF1, aes(x = conc, y = response)) +
-  geom_point(aes(colour = round))+
+  geom_point(aes(colour = chemical))+
   #ggtitle(sheets[i]) +
   theme(legend.position = "none") +
   #geom_path(aes(colour = round), size = 0.1) + 
@@ -195,6 +217,8 @@ p <- ggplot(DF1, aes(x = conc, y = response)) +
 png(file="mix-mixDR.png",width=4800,height=2800,res=300)
 p
 dev.off()
+
+
 
 ##################### PredTox
 
@@ -225,15 +249,14 @@ effv_est <- function(i, init_n = 1){
   return(y)  
 }
 
-
-ugl.POD.H <- df2$`POD max` * df3$`Molecular weight`
-
-effv <- ugl.POD.H / sum(ugl.POD.H)
+eff <- df2$`POD max`
+effv <- eff / sum(eff)
 
 
 effPoints <- rev((c(0.025, 0.03, 0.05, 0.1, 0.15, 0.2, 
                     0.25, 0.3, 0.35, 0.4, 0.45, 0.47, 0.5, 0.52, 
                     0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.999)))
+
 pctEcx <- t(t(effv/sum(effv)))
 
 
@@ -302,35 +325,7 @@ y<-filter(DF1, effect == "cellnum" & chemical == "POD mx")["response"]/100
 png(file="mix-ca.png",width=3600,height=2800,res=300)
 plot(x,as.matrix(y), log = "x", pch = 19, 
      main = "Concentration addition",
-     xlab = "log(c) umol/L", ylab = "Inhibition (%)")
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
 lines(ca, effPoints, lwd = 2, col = 2)
 dev.off()
 
-##########################
-
-effv_POD_min <- df2$`POD min` / sum(df2$`POD min`)
-effv_POD_max <- df2$`POD max` / sum(df2$`POD max`)
-effv_AC50_min <- df2$`AC50 min` / sum(df2$`AC50 min`)
-effv_AC50_max <- df2$`AC50 max` / sum(df2$`AC50 max`)
-effv_Expo_max <- df2$`Expo max` / sum(df2$`Expo max`)
-effv_Expo_min <- df2$`Expo min` / sum(df2$`Expo min`)
-effv_RFD_min <- df2$`RFD min` / sum(df2$`RFD min`)
-effv_RFD_max <- df2$`RFD max` / sum(df2$`RFD max`)
-
-X <- data.frame(effv_AC50_min, effv_AC50_max,
-                effv_Expo_min, effv_Expo_max, effv_POD_min, effv_POD_max, effv_RFD_min, effv_RFD_max)
-
-row.names(X) <- df2[,1]
-colnames(X) <- c("AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
-
-pct_df <- X %>% as.matrix() %>% reshape2::melt()
-names(pct_df) <- c("chemical", "EC", "percentage")
-pct_df <- ddply(pct_df, .(EC), transform, pos = 1- (cumsum(percentage) - (0.5 * percentage)))
-
-png(file="mixtox-3.png",width=4800,height=2800,res=300)
-ggplot() + geom_bar(aes(y = percentage*100, x = EC, fill = chemical), data = pct_df, stat="identity")+
-  ggtitle("Percentage of individual chemicals in the mixtures")+
-  #geom_text(data=pct_df, aes(x = EC, y = pos*100, label = paste0(round(percentage*100, 2),"%")), size=4) +
-  xlab("Design")+ scale_fill_viridis(discrete=TRUE) +
-  ylab("Percentage (%)")
-dev.off()

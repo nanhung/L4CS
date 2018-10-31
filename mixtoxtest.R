@@ -53,7 +53,7 @@ dev.off()
 
 png(file="significant_test.png",width=3600,height=2800,res=300)
 ggplot(dfChemdose, aes(x = estimate, y = -log(p.value), label = chemical)) +
-  xlab(expression('slope'))+
+  xlab('slope')+
   ylab("-log10 (p-value)") +
   geom_hline(yintercept=-log(0.001), col = "grey60", linetype = "dotted")+
   geom_hline(yintercept=-log(0.05), col = "grey60", linetype = "dashed")+
@@ -102,7 +102,7 @@ ggplot(P.DF, aes(x = reorder(chemical, logp), y=logp, label = scaling)) +
   geom_path(linetype = 2, color = "grey40") +
   geom_hline(yintercept=-log(0.05), col = "grey60", linetype = "dashed")+
   geom_hline(yintercept=-log(0.001), col = "grey60", linetype = "dotted")+
-  xlab(expression('chemical'))+
+  xlab('chemical')+
   ylab("-log10 (p-value)") +
   annotate("text", x = 1, y = -log(0.05)+0.2, label = "p = 0.05", col = "grey60")+
   annotate("text", x = 1, y = -log(0.001)+0.2, label = "p = 0.001", col = "grey60")+
