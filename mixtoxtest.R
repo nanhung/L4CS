@@ -28,6 +28,7 @@ dfChemdose <- dfChemCoef %>% filter(term %in% "dose") %>%
   mutate(screen = ifelse(p.value < 0.001 & estimate < 0, "Tox", "Non-Tox"))
 
 #####
+sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
 df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
 df <- data.frame(df[,c(6:13)])
 row.names(df) <- unique(DF1$chemical)
