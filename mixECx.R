@@ -1,3 +1,46 @@
+indAct <- function(model, param, pctEcx, effPoints){
+  # independent action
+  ecPoints <- ECx(model, param, effPoints)
+  fac <- nrow(pctEcx)
+  lev <- ncol(pctEcx)
+  iaFun <- as.character(rep(1, lev))
+  
+  for (i in seq(lev)){
+    # IA equation construction
+    # xx means x elsewhere
+    for (j in seq(fac)){
+      #if (model[j] == 'Hill_two')
+      #	iaFun[i] <- paste(iaFun[i], '*', '(1 - (', param[j, 2], '* xx / (', param[j, 1], '+ xx)))', sep = '')
+      #else 
+        iaFun[i] <- paste(iaFun[i], '*', '(1 - (', param[j, 3] ,'/ (1 + (', param[j, 1], '/', pctEcx[j, i], '* xx)^', param[j, 2], ')))', sep = '')
+    }
+  }
+    
+    #p[1] * ((p[3] / effv0 - 1)^(1 / p[2]))
+    
+  
+  a <- 1e-9
+  b <- 6
+  eps <- 1e-10		
+  root <- matrix(0, lev, ncol(ecPoints))
+  
+  for (i in seq(lev)){
+    fia <-  iaFun[i]
+    for (k in seq(ncol(ecPoints))){
+      value <- 1 - effPoints[k]
+      fun <- paste(value, '-',  fia, sep = '')
+      f = function(xx) eval(parse(text = fun))
+      root[i, k] <- uniroot(f, c(a, b), tol = eps)$root
+    }
+  }
+  
+  colName <- paste('EC', effPoints * 100, sep = '')
+  colnames(root) <- colName
+  return(root)
+}
+
+
+
 Fit <- function(i, init_n = 1, effect = sheets[3]){
   
   df <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = effect)

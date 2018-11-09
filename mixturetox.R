@@ -240,25 +240,14 @@ names(df2) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min"
 
 chem <- as.data.frame(df1[,1])
 
+#effv_est <- function(i, init_n = 1){
+#  X <- Fit(i, init_n)
+#  C <- df2[i,'POD max']
+#  y <- X$p[3] / (1 + (C/X$p[1])^X$p[2])
+#  return(y)  
+#}
+
 source("mixECx.R")
-
-effv_est <- function(i, init_n = 1){
-  X <- Fit(i, init_n)
-  C <- df2[i,'POD max']
-  y <- X$p[3] / (1 + (C/X$p[1])^X$p[2])
-  return(y)  
-}
-
-eff <- df2$`POD max`
-effv <- eff / sum(eff)
-
-
-effPoints <- rev((c(0.025, 0.03, 0.05, 0.1, 0.15, 0.2, 
-                    0.25, 0.3, 0.35, 0.4, 0.45, 0.47, 0.5, 0.52, 
-                    0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.999)))
-
-pctEcx <- t(t(effv/sum(effv)))
-
 
 model <- rep('Hill_three_rev', 42)
 param <- matrix(c(c(df2$`AC50 max`[1], 1, 1),
@@ -305,27 +294,134 @@ param <- matrix(c(c(df2$`AC50 max`[1], 1, 1),
                   Fit(41, effect = sheets[3])$p,
                   Fit(42, effect = sheets[3])$p), byrow = T, ncol =3)
 
-ECx(model, param, effPoints)
 
-concAdd <- function(pctEcx, effPoints) {
-  ecPoints <- ECx(model, param, effPoints)
-  ca <- 1/(t(pctEcx) %*% (1/ecPoints))
+effPoints <- rev((c(0.05, 0.1, 0.15, 0.2, 
+                    0.25, 0.3, 0.35, 0.4, 0.45, 0.47, 0.5, 0.52, 
+                    0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.999)))
+
+
+#eff <- df2$`AC50 max`
+#effv <- eff / sum(eff)
+#pctEcx <- t(t(effv/sum(effv)))
+
+
+ca_estimate <- function(data){
+  eff <- data
+  effv <- eff / sum(eff)
+  pctEcx <- t(t(effv/sum(effv)))
+  
+  concAdd <- function(pctEcx, effPoints) {
+    ecPoints <- ECx(model, param, effPoints)
+    ca <- 1/(t(pctEcx) %*% (1/ecPoints))
+    return(ca)
+  }
+  
+  ca <- concAdd(pctEcx, rev(effPoints))
+  ca <- c(1e-4, as.numeric(ca))
+  
   return(ca)
 }
 
-ca <- concAdd(pctEcx, rev(effPoints))
+ia_estimate <- function(data){
+  eff <- data
+  effv <- eff / sum(eff)
+  pctEcx <- t(t(effv/sum(effv)))
+  
+  ia <- indAct(model, param, pctEcx, effPoints)
+  ia <- c(1e-4, as.numeric(ia))
+  return(ia)
+}
 
-ca <- c(10e-3, as.numeric(ca))
-effPoints<- c(0.999, effPoints)
+ia_AC5mn <- ia_estimate(df2$`AC50 min`)
+ia_AC5mx <- ia_estimate(df2$`AC50 max`)
+ia_Expmx <- ia_estimate(df2$`Expo min`)
+ia_Expmn <- ia_estimate(df2$`Expo max`)
+ia_PODmn <- ia_estimate(df2$`POD min`)
+ia_PODmx <- ia_estimate(df2$`POD max`)
+ia_RfDmn <- ia_estimate(df2$`RFD min`)
+ia_RfDmx <- ia_estimate(df2$`RFD max`)
 
-x<-filter(DF1, effect == "cellnum" & chemical == "POD mx")["conc"] %>% as.matrix()
-y<-filter(DF1, effect == "cellnum" & chemical == "POD mx")["response"]/100
+ca_AC5mx <- ca_estimate(df2$`AC50 max`)
+ca_AC5mn <- ca_estimate(df2$`AC50 min`)
+ca_Expmx <- ca_estimate(df2$`Expo min`)
+ca_Expmn <- ca_estimate(df2$`Expo max`)
+ca_PODmn <- ca_estimate(df2$`POD min`)
+ca_PODmx <- ca_estimate(df2$`POD max`)
+ca_RfDmn <- ca_estimate(df2$`RFD min`)
+ca_RfDmx <- ca_estimate(df2$`RFD max`)
 
+EffPoints <- c(0.999, effPoints)
+rsp_rng <- range(filter(DF1, effect == "cellnum")["response"]/100)
 
-png(file="mix-ca.png",width=3600,height=2800,res=300)
-plot(x,as.matrix(y), log = "x", pch = 19, 
-     main = "Concentration addition",
+x_AC5mx <-filter(DF1, effect == "cellnum" & chemical == "AC50 mx")["conc"] %>% as.matrix()
+y_AC5mx <-filter(DF1, effect == "cellnum" & chemical == "AC50 mx")["response"]/100
+x_AC5mn <-filter(DF1, effect == "cellnum" & chemical == "AC50 mn")["conc"] %>% as.matrix()
+y_AC5mn <-filter(DF1, effect == "cellnum" & chemical == "AC50 mn")["response"]/100
+x_Expmx <-filter(DF1, effect == "cellnum" & chemical == "Expo mx")["conc"] %>% as.matrix()
+y_Expmx <-filter(DF1, effect == "cellnum" & chemical == "Expo mx")["response"]/100
+x_Expmn <-filter(DF1, effect == "cellnum" & chemical == "Expo mn")["conc"] %>% as.matrix()
+y_Expmn <-filter(DF1, effect == "cellnum" & chemical == "Expo mn")["response"]/100
+x_PODmx <-filter(DF1, effect == "cellnum" & chemical == "POD mx")["conc"] %>% as.matrix()
+y_PODmx <-filter(DF1, effect == "cellnum" & chemical == "POD mx")["response"]/100
+x_PODmn <-filter(DF1, effect == "cellnum" & chemical == "POD mn")["conc"] %>% as.matrix()
+y_PODmn <-filter(DF1, effect == "cellnum" & chemical == "POD mn")["response"]/100
+x_RfDmx <-filter(DF1, effect == "cellnum" & chemical == "RfD mx")["conc"] %>% as.matrix()
+y_RfDmx <-filter(DF1, effect == "cellnum" & chemical == "RfD mx")["response"]/100
+x_RfDmn <-filter(DF1, effect == "cellnum" & chemical == "RfD mn")["conc"] %>% as.matrix()
+y_RfDmn <-filter(DF1, effect == "cellnum" & chemical == "RfD mn")["response"]/100
+
+png(file="mix-caia.png",width=3600,height=1800,res=300)
+par(mfrow = c(2,4))
+plot(x_AC5mn,as.matrix(y_AC5mn), log = "x", pch = 19, 
+     main = "AC50 min", ylim = rsp_rng,
      xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
-lines(ca, effPoints, lwd = 2, col = 2)
+lines(ca_AC5mn, EffPoints, lwd = 2, col = 2)
+lines(ia_AC5mn, EffPoints, lwd = 2, col = 3)
+
+plot(x_AC5mx,as.matrix(y_AC5mx), log = "x", pch = 19, 
+     main = "AC50 max", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_AC5mx, EffPoints, lwd = 2, col = 2)
+lines(ia_AC5mx, EffPoints, lwd = 2, col = 3)
+
+plot(x_Expmn, as.matrix(y_Expmn), log = "x", pch = 19, 
+     main = "Expo min", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_Expmn, EffPoints, lwd = 2, col = 2)
+lines(ia_Expmn, EffPoints, lwd = 2, col = 3)
+
+plot(x_Expmx, as.matrix(y_Expmx), log = "x", pch = 19, 
+     main = "Expo max", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_Expmx, EffPoints, lwd = 2, col = 2)
+lines(ia_Expmx, EffPoints, lwd = 2, col = 3)
+
+plot(x_PODmn,as.matrix(y_PODmn), log = "x", pch = 19, 
+     main = "POD min", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_PODmn, EffPoints, lwd = 2, col = 2)
+lines(ia_PODmn, EffPoints, lwd = 2, col = 3)
+
+plot(x_PODmx,as.matrix(y_PODmx), log = "x", pch = 19, 
+     main = "POD max", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_PODmx, EffPoints, lwd = 2, col = 2)
+lines(ia_PODmx, EffPoints, lwd = 2, col = 3)
+
+plot(x_RfDmn,as.matrix(y_RfDmn), log = "x", pch = 19, 
+     main = "RfD min", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_RfDmn, EffPoints, lwd = 2, col = 2)
+lines(ia_RfDmn, EffPoints, lwd = 2, col = 3)
+
+plot(x_RfDmx,as.matrix(y_RfDmx), log = "x", pch = 19, 
+     main = "RfD max", ylim = rsp_rng,
+     xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)")
+lines(ca_RfDmx, EffPoints, lwd = 2, col = 2)
+lines(ia_RfDmx, EffPoints, lwd = 2, col = 3)
+
 dev.off()
+
+
+
 
