@@ -9,30 +9,28 @@ library(readxl)
 library(gridExtra)
 library(reshape2)
 
-# df <- read.csv("mixture.csv")
+
+#
+library(tidyverse)
+library(readxl)
+library(reshape)
+library(magrittr)
 
 sheets <- excel_sheets("Mixture_Neuron.xlsx")
-
-df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
-RName<-as.matrix(df[,2])
-
-df <- data.frame(df[,c(6:13)])
-row.names(df) <- RName
+x <- read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1]) %>% as.data.frame()
+row.names(x) <- as.matrix(x[,2])
+df <- x[,c(6:13)]
 names(df) <- c("AC50 min","AC50 Max","Expo min","Expo max","POD min","POD max","RFD min","RFD max")
 
-X <- df %>% as.matrix() %>%
-  reshape::melt() %>% 
-  magrittr::set_colnames(c("chemical", "response", "dose"))
-
-df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
+X <- df %>% as.matrix() %>% melt() %>% set_colnames(c("chemical", "response", "dose"))
 
 
-df$pct.MW.AC50.L <- df$`Min. AC50` / sum(df$`Min. AC50`)
-df$pct.MW.AC50.H <- df$`Max. AC50` / sum(df$`Max. AC50`)
-df$pct.MW.Css.L <- df$Css.medExpos_medRTK.plasma.uM /sum(df$Css.medExpos_medRTK.plasma.uM)
-df$pct.MW.Css.H <- df$Css.95percExpos_95RTK.plasma.uM /sum(df$Css.95percExpos_95RTK.plasma.uM)
-df$pct.MW.RFD.L <- df$RFD.Low /sum(df$RFD.Low)
-df$pct.MW.RFD.H <- df$RFD.High /sum(df$RFD.High)
+df$pct.MW.AC50.L <- df$`AC50 min`/ sum(df$`AC50 min`)
+df$pct.MW.AC50.H <- df$`AC50 Max` / sum(df$`AC50 Max`)
+df$pct.MW.Css.L <- df$`Expo min` /sum(df$`Expo min`)
+df$pct.MW.Css.H <- df$`Expo max` /sum(df$`Expo max`)
+df$pct.MW.RFD.L <- df$`RFD min` /sum(df$`RFD min`)
+df$pct.MW.RFD.H <- df$`RFD max` /sum(df$`RFD max`)
 df$pct.MW.POD.L <- df$POD.Lowest /sum(df$POD.Lowest)
 df$pct.MW.POD.H <- df$POD.Highest /sum(df$POD.Highest)
 
@@ -164,7 +162,7 @@ dev.off()
 
 DR <- function(i){
   sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
-
+  
   df <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[i])
   df <- as.data.frame(df)
   
@@ -181,7 +179,7 @@ DR <- function(i){
   colnames(DF1)[4]<-"response"
   
   ggplot(DF1, aes(x = dilution, y = response)) +
-#   ggplot(DF1, aes(x = conc, y = response)) +
+    #   ggplot(DF1, aes(x = conc, y = response)) +
     geom_point(aes(colour = round))+
     geom_path(aes(colour = round), size = 0.1) + 
     facet_wrap( ~ chemical, ncol = 4) + theme_bw() +
