@@ -1,3 +1,13 @@
+ia_estimate <- function(data){
+  eff <- data
+  effv <- eff / sum(eff)
+  pctEcx <- t(t(effv/sum(effv)))
+  
+  ia <- indAct(model, param, pctEcx, effPoints)
+  ia <- c(1e-4, as.numeric(ia))
+  return(ia)
+}
+
 indAct <- function(model, param, pctEcx, effPoints){
   # independent action
   ecPoints <- ECx(model, param, effPoints)
@@ -9,15 +19,9 @@ indAct <- function(model, param, pctEcx, effPoints){
     # IA equation construction
     # xx means x elsewhere
     for (j in seq(fac)){
-      #if (model[j] == 'Hill_two')
-      #	iaFun[i] <- paste(iaFun[i], '*', '(1 - (', param[j, 2], '* xx / (', param[j, 1], '+ xx)))', sep = '')
-      #else 
-        iaFun[i] <- paste(iaFun[i], '*', '(1 - (', param[j, 3] ,'/ (1 + (', param[j, 1], '/', pctEcx[j, i], '* xx)^', param[j, 2], ')))', sep = '')
+      iaFun[i] <- paste(iaFun[i], '*', '(1 - (', param[j, 3] ,'/ (1 + (', param[j, 1], '/', pctEcx[j, i], '* xx)^', param[j, 2], ')))', sep = '')
     }
   }
-    
-    #p[1] * ((p[3] / effv0 - 1)^(1 / p[2]))
-    
   
   a <- 1e-9
   b <- 6
@@ -39,6 +43,22 @@ indAct <- function(model, param, pctEcx, effPoints){
   return(root)
 }
 
+ca_estimate <- function(data){
+  eff <- data
+  effv <- eff / sum(eff)
+  pctEcx <- t(t(effv/sum(effv)))
+  
+  concAdd <- function(pctEcx, effPoints) {
+    ecPoints <- ECx(model, param, effPoints)
+    ca <- 1/(t(pctEcx) %*% (1/ecPoints))
+    return(ca)
+  }
+  
+  ca <- concAdd(pctEcx, rev(effPoints))
+  ca <- c(1e-4, as.numeric(ca))
+  
+  return(ca)
+}
 
 
 Fit <- function(i, init_n = 1, effect = sheets[3]){
@@ -92,7 +112,6 @@ Fit <- function(i, init_n = 1, effect = sheets[3]){
   
   list(p = paramHat, sta = sta)  
 }
-
 
 ECx <- function(model, param, effv, rtype = 'continuous', Scaled = TRUE){
   #calculate effect concentrations using associated inverse function
@@ -232,4 +251,12 @@ CEx <- function(model, param, conc){
   colnames(effv) <- colName
   if(is.null(rownames(param))) rownames(effv) <- model else rownames(effv) <- rownames(param)
   return(effv)
+}
+
+mixtoxPlot <- function(x, y, ca, ia, effPoints, ...){
+  plot(x, as.matrix(y), xlim = range(x, ca, ia),
+       xlab = expression(paste("Concentration (", mu,"M)")), ylab = "Inhibition (%)",
+       log = "x", pch = 19, ...)
+  lines(ca, effPoints, lwd = 1.5, col = 2)
+  lines(ia, effPoints, lwd = 1.5, col = 3)
 }
