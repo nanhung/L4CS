@@ -1,4 +1,6 @@
 # Package
+library(maps)
+library(mapproj)
 library(ggplot2)
 library(gridExtra)
 
@@ -32,7 +34,3 @@ p_BCS <- ggplot(data = brazos, mapping = aes(x = long, y = lat)) +
   coord_map(project="globular") +
   labs(x=NULL, y=NULL) +
   theme_bw()
-
-grid.arrange(p_US, 
-             arrangeGrob(p_TX, p_BCS, ncol = 2),
-             ncol = 1)
