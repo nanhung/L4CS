@@ -11,10 +11,11 @@ library(tidyr) #seperate
 library(broom)
 library(scales)
 
-df <- read.csv("mixtoxtest.csv")
+sheets <- readxl::excel_sheets("42_Chem_Neuron.xlsx")
+df <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = sheets[2]) # effect
 colnames(df)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
-            "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
-DF <- df %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
+                "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
+DF <- df %>% as.data.frame() %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
 DF$dosen <- as.numeric(DF$dose)
 DF1 <- DF %>% mutate(dose = 10^(dosen-3))
 colnames(DF1)[4]<-"response"

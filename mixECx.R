@@ -63,7 +63,7 @@ ca_estimate <- function(data){
 
 Fit <- function(i, init_n = 1, effect = sheets[3]){
   
-  df <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = effect)
+  df <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = effect) 
   colnames(df)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
                    "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
   DF <- df %>% as.data.frame() %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
@@ -112,6 +112,10 @@ Fit <- function(i, init_n = 1, effect = sheets[3]){
   
   list(p = paramHat, sta = sta)  
 }
+
+
+
+
 
 ECx <- function(model, param, effv, rtype = 'continuous', Scaled = TRUE){
   #calculate effect concentrations using associated inverse function

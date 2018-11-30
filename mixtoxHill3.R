@@ -1,14 +1,19 @@
+rm(list=ls())
+
 library(dplyr)
 library(tidyr) #seperate
 library(minpack.lm)
+library(drc)
 
-df1 <- read.csv("mixtoxtest.csv")
+sheets <- readxl::excel_sheets("42_Chem_Neuron.xlsx")
+df1 <- readxl::read_xlsx("42_Chem_Neuron.xlsx", sheet = sheets[10]) 
+#df1 <- read.csv("mixtoxtest.csv")
 sheets <- readxl::excel_sheets("Mixture_Neuron.xlsx")
 df2 <- readxl::read_xlsx("Mixture_Neuron.xlsx", sheet = sheets[1])
 df1[,1] <- df2[,2]
 colnames(df1)<-c("chemical", "1_r1","1_r2", "2_r1","2_r2", 
                  "3_r1","3_r2", "4_r1","4_r2", "5_r1","5_r2")
-DF <- df1 %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
+DF <- df1 %>% as.data.frame() %>% reshape::melt() %>% separate(variable, c("dose", "round")) 
 DF$dosen <- as.numeric(DF$dose)
 DF1 <- DF %>% mutate(dose = 10^(dosen-3))
 colnames(DF1)[4]<-"response"
@@ -16,12 +21,56 @@ colnames(DF1)[4]<-"response"
 df2 <- data.frame(df2[,c(2,6:13)])
 names(df2) <- c("chemical","AC50 min","AC50 max","Expo max","Expo min","POD min","POD max","RFD min","RFD max")
 
-chem <- df1[,1]
+chem <- df1[,1] %>% as.data.frame()
+
+# ####
+
+X <- matrix(0, nrow = 42)
+for(i in 1:42){
+  DF <- DF1 %>% filter(chemical == chem[i,]) %>% group_by(round) 
+  x <- DF$dose
+  y <- DF$response/100
+  tryCatch(O <- summary(drm(y~x, data=data.frame(x,y), fct=LL.3())), error=function(e) NULL)
+  X[i,1] <- ifelse(O$coefficients[1,1] > 0.1, 1, 0)
+}
+sum(X)
+
+drm.Fit <- function(i){
+  DF <- DF1 %>% filter(chemical == chem[i,]) %>% group_by(round) 
+  x <- DF$dose
+  y <- DF$response/100
+  tryCatch(out <- summary(drm(y~x, data=data.frame(x,y), fct=LL.3())), error=function(e) NULL)
+  tryCatch(plot(drm(y~x, data=data.frame(x,y), fct=LL.3()), 
+                main = paste(chem[i,]), ylim = c(0, 1.2)),
+           error=function(e) plot(x, y, log = "x", main = chem[i,], pch = 19, cex =0.6))
+  points(x, y, main = chem[i,], pch = 19, cex = 0.6)
+  tryCatch(text(0.01, 0.5, paste("Emax = ", round(out$coefficients[2,1], digits = 3)), adj = 0), error=function(e) NULL)
+  tryCatch(text(0.01, 0.35, paste("EC50 = ", round(out$coefficients[3,1], digits = 3)), adj = 0), error=function(e) NULL)
+  tryCatch(text(0.01, 0.2, paste("n = ", round(out$coefficients[1,1], digits = 3)), adj = 0), error=function(e) NULL)
+}
+
+png(file="mixtox-MitochondriaIntegrity.png",width=4800,height=2800,res=300)
+par(mfrow = c(6,7), mar = c(2,3,3,1))
+for (i in 1:42){
+  drm.Fit(i)
+}
+dev.off()
 
 
+
+
+
+
+
+
+
+
+source("mixECx.R")
+
+# ####
 plotFit <- function(i, init_n = 1){
-
-  DF <- DF1 %>% filter(chemical == chem[i]) %>% group_by(round) 
+  
+  DF <- DF1 %>% filter(chemical == chem[i,]) %>% group_by(round) 
   
   x <- DF$dose
   y <- DF$response/100
@@ -82,7 +131,7 @@ plotFit <- function(i, init_n = 1){
   CI.low <- py - probT * gap.CI # CI lower bound
   crcInfo <- cbind(px, py, PI.low, PI.up, CI.low, CI.up)
   
-  plot(log(DF$dose, 10), DF$response/100, pch = 19, col="darkgrey", main = paste(chem[i], "; r2 =", round(sta[1],2)),
+  plot(log(DF$dose, 10), DF$response/100, pch = 19, col="darkgrey", main = paste(chem[i,], "; r2 =", round(sta[1],2)),
        xlab=expression(paste("Log", "Conc. (", mu,"M)")), ylab="Response (%)")
   lines(px,py, col = 1, lwd = 2)
   lines(px,CI.up, col = 2, lwd = 1, lty = 2)
@@ -94,9 +143,41 @@ plotFit <- function(i, init_n = 1){
   #max <- log(df2[which(df2[,1] == chem[i]), "POD max"], 10)   
   #
   #polygon(c(min, max, max, min), c(2 , 2, -1, -1), col=rgb(1, 0, 0,0.1), border=NA)
-
+  
   print(list(p = paramHat, sta = sta))
 }
+
+
+plotFit(1)
+plotFit(2)
+plotFit(3)
+
+
+plotFit(4)
+plotFit(5)
+plotFit(6)
+plotFit(7)
+plotFit(12)
+plotFit(15)
+plotFit(16)
+plotFit(18)
+plotFit(19)
+plotFit(20)
+plotFit(22)
+plotFit(23)
+plotFit(25)
+plotFit(27)
+plotFit(28)
+plotFit(31)
+plotFit(33)
+plotFit(36)
+plotFit(37)
+plotFit(39)
+plotFit(40)
+plotFit(41)
+plotFit(42)
+
+
 
 png(file="ind-DR.png",width=4800,height=2800,res=300)
 par(mfrow = c(4,6))
@@ -124,6 +205,11 @@ plotFit(40)
 plotFit(41)
 plotFit(42)
 dev.off()
+
+
+
+
+
 
 
 ###########################

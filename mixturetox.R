@@ -249,6 +249,10 @@ chem <- as.data.frame(df1[,1])
 
 source("mixECx.R")
 
+Fit
+Fit(1, effect = sheets[2])
+
+
 model <- rep('Hill_three_rev', 42)
 param <- matrix(c(c(df2$`AC50 max`[1], 1, 1),
                   c(df2$`AC50 max`[2], 1, 1),
